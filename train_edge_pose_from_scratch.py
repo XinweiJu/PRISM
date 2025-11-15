@@ -12,7 +12,6 @@ if __name__ == "__main__":
     print(f"🔍 Model name: {model_name}")
     model_base = f"/Datasets/Weights_Feast_all/monodepth/{model_name}/models/weights_19"
 
-    # ✅ 在这里统一设置路径，不通过 argparse
     opts.model_load_paths = {
         "encoder": f"{model_base}/encoder.pth",
         "depth": f"{model_base}/depth.pth",

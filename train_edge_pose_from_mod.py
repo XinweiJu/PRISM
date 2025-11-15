@@ -11,7 +11,6 @@ if __name__ == "__main__":
     model_name = opts.model_name.replace("_edge_ssim_depth_fix_thorough_aug", "")
     model_base = f"/Datasets/FEAST_Weights/Weights_Feast_all/monodepth/{model_name}/models/weights_19"
 
-    # ✅ 在这里统一设置路径，不通过 argparse
     opts.model_load_paths = {
         "encoder": f"{model_base}/encoder.pth",
         "depth": f"{model_base}/depth.pth",

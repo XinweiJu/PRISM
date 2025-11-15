@@ -127,16 +127,13 @@ def save_colored_depth(depth_tensor, output_path):
     else:
         depth_np = depth_tensor
     
-    # 使用更好的颜色映射
     vmax = np.percentile(depth_np, 95)
     vmin = np.percentile(depth_np, 5)
     normalizer = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
     
-    # 使用 'plasma' 或 'viridis' 颜色映射，比 'magma' 更鲜艳
     mapper = cm.ScalarMappable(norm=normalizer, cmap='jet')
     colormapped_im = (mapper.to_rgba(depth_np)[:, :, :3] * 255).astype(np.uint8)
     
-    # 调整到目标分辨率 1440x1080
     colored_pil = pil.fromarray(colormapped_im)
     colored_resized = colored_pil.resize((1440, 1080), pil.LANCZOS)
     colored_resized.save(output_path)

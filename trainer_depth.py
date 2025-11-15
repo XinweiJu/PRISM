@@ -1041,11 +1041,9 @@ class Trainer:
                     pretrained_channels_per_image = v.shape[1] // num_input_images
 
                     if pretrained_channels_per_image == channels_per_image:
-                        # 完全匹配，无需适配
                         full_weight = v
 
                     elif pretrained_channels_per_image == 3 and channels_per_image > 3:
-                        # 自动扩展灰度通道
                         print(f"🔁 Expanding pretrained RGB weights to {channels_per_image} channels per image")
 
                         rgb_weight = v  # [64, 3*num_input_images, 7, 7]
@@ -1063,14 +1061,12 @@ class Trainer:
                             f"{pretrained_channels_per_image} → {channels_per_image}"
                         )
 
-                    # 重排：[R1,G1,B1,E1,...]
                     reordered = []
                     for i in range(num_input_images):
                         for c in range(channels_per_image):
                             reordered.append(full_weight[:, i * channels_per_image + c:i * channels_per_image + c + 1, :, :])
                     new_conv1 = torch.cat(reordered, dim=1)
 
-                    # 安全检查
                     assert new_conv1.shape == model_dict[k].shape, \
                         f"❌ Weight shape mismatch: got {new_conv1.shape}, expected {model_dict[k].shape}"
 

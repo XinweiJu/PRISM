@@ -389,7 +389,6 @@ class Trainer:
         self.save_opts()
 
     def freeze_depth_networks(self):
-        """冻结depth相关的网络参数"""
         print("🔒 Freezing depth networks...")
         
         # 冻结encoder
@@ -413,13 +412,11 @@ class Trainer:
     def set_train(self):
         """Convert all models to training mode
         """
-        # 🔥 修复：只将pose相关的模型设置为训练模式
         if "pose_encoder" in self.models:
             self.models["pose_encoder"].train()
         if "pose" in self.models:
             self.models["pose"].train()
         
-        # 确保depth相关模型保持eval模式（即使参数已冻结）
         if "encoder" in self.models:
             self.models["encoder"].eval()
         if "depth" in self.models:
@@ -520,7 +517,6 @@ class Trainer:
 
             outputs = self.models["depth"](features[0])
         else:
-            # 🔥 修改：depth推理部分用no_grad包围
             with torch.no_grad():
                 if self.opt.training_mode in ["depth", "both"]:
                     if self.depth_use_lum == True:
@@ -532,9 +528,8 @@ class Trainer:
                 features = self.models["encoder"](inputs_feature)
                 outputs = self.models["depth"](features)
 
-        # predictive_mask也需要no_grad
         if self.opt.predictive_mask:
-            with torch.no_grad():  # 🔥 新增
+            with torch.no_grad():  
                 outputs["predictive_mask"] = self.models["predictive_mask"](features)
 
 
@@ -544,7 +539,6 @@ class Trainer:
         if self.use_pose_net:
             outputs.update(self.predict_poses(inputs, features))
 
-        # 🔥 修复：不能对整个图像生成过程使用no_grad，因为edge loss需要梯度
         self.generate_images_pred(inputs, outputs)
 
         losses = self.compute_losses(inputs, outputs)
@@ -647,7 +641,6 @@ class Trainer:
         Generated images are saved into the `outputs` dictionary.
         """
         for scale in self.opt.scales:
-            # 🔥 修复：depth相关计算用no_grad，但要保证pose梯度传播
             with torch.no_grad():
                 disp = outputs[("disp", scale)]
                 if self.opt.v1_multiscale:
@@ -659,7 +652,6 @@ class Trainer:
 
                 _, depth = disp_to_depth(disp, self.opt.min_depth, self.opt.max_depth)
                 
-            # 将depth存储，但detach确保不传播深度网络的梯度
             outputs[("depth", 0, scale)] = depth.detach()
 
             for i, frame_id in enumerate(self.opt.frame_ids[1:]):
@@ -681,13 +673,10 @@ class Trainer:
                     T = transformation_from_parameters(
                         axisangle[:, 0], translation[:, 0] * mean_inv_depth[:, 0], frame_id < 0)
 
-                # 🔥 关键修复：确保pose梯度能够传播
-                # depth已经detached，但T包含pose梯度
                 cam_points = self.backproject_depth[source_scale](
-                    depth.detach(), inputs[("inv_K", source_scale)])  # 明确detach depth
+                    depth.detach(), inputs[("inv_K", source_scale)])  
                 pix_coords = self.project_3d[source_scale](
-                    cam_points, inputs[("K", source_scale)], T)  # T有梯度，应该能传播到pix_coords
-
+                    cam_points, inputs[("K", source_scale)], T)  
                 outputs[("sample", frame_id, scale)] = pix_coords
 
                 outputs[("color", frame_id, scale)] = F.grid_sample(
@@ -901,10 +890,8 @@ class Trainer:
         if self.opt.edge_loss:
             total_loss_edge /= self.num_scales
             losses["edge_loss"] = total_loss_edge
-            # 🔥 修复：pose loss只包含edge loss（因为depth loss来自冻结网络）
             losses["loss_pose"] = total_loss_edge
         else:
-            # 🔥 修复：如果没有edge loss，pose training就没有损失函数，应该报错
             raise ValueError("❌ No edge loss but trying to train pose network. This setup is invalid!")
             # losses["loss_pose"] = torch.tensor(0.0, device=self.device, requires_grad=True)
 
@@ -1075,20 +1062,17 @@ class Trainer:
                     pretrained_channels_per_image = v.shape[1] // num_input_images
 
                     if pretrained_channels_per_image == channels_per_image:
-                        # 完全匹配，无需适配
                         print(f"✅ Channels match perfectly: {pretrained_channels_per_image} per image")
                         adapted_dict[k] = v
                         print(f"✅ Loaded {k} without adaptation")
-                        continue  # 🔥 重要：跳过后续的重排逻辑
+                        continue  
 
                     elif pretrained_channels_per_image == 3 and channels_per_image > 3:
-                        # 自动扩展额外通道（edge/lum等）
                         print(f"🔁 Expanding pretrained RGB weights to {channels_per_image} channels per image")
 
                         rgb_weight = v  # [64, 3*num_input_images, 7, 7]
                         extra_channels = channels_per_image - 3
 
-                        # 为额外通道创建权重：使用RGB的平均值作为初始化
                         gray = torch.mean(
                             v.reshape(64, num_input_images, 3, 7, 7), dim=2)  # → [64, num_input_images, 7, 7]
                         gray = gray.reshape(64, num_input_images, 1, 7, 7).repeat(1, 1, extra_channels, 1, 1)
@@ -1096,12 +1080,10 @@ class Trainer:
                         full_weight = torch.cat([rgb_weight, gray], dim=1)
 
                     elif pretrained_channels_per_image > 3 and channels_per_image == 3:
-                        # 从多通道权重中提取RGB部分
                         print(f"🔁 Extracting RGB channels from {pretrained_channels_per_image}-channel pretrained weights")
                         
-                        # 重塑并提取RGB通道
                         reshaped = v.reshape(64, num_input_images, pretrained_channels_per_image, 7, 7)
-                        rgb_only = reshaped[:, :, :3, :, :]  # 取前3个通道
+                        rgb_only = reshaped[:, :, :3, :, :]  
                         full_weight = rgb_only.reshape(64, num_input_images * 3, 7, 7)
 
                     else:
@@ -1110,14 +1092,12 @@ class Trainer:
                             f"{pretrained_channels_per_image} → {channels_per_image}"
                         )
 
-                    # 重排：[R1,G1,B1,E1,...]
                     reordered = []
                     for i in range(num_input_images):
                         for c in range(channels_per_image):
                             reordered.append(full_weight[:, i * channels_per_image + c:i * channels_per_image + c + 1, :, :])
                     new_conv1 = torch.cat(reordered, dim=1)
 
-                    # 安全检查
                     assert new_conv1.shape == model_dict[k].shape, \
                         f"❌ Weight shape mismatch: got {new_conv1.shape}, expected {model_dict[k].shape}"
 
@@ -1128,7 +1108,6 @@ class Trainer:
                     adapted_dict[k] = v
                 else:
                     if k in ["height", "width", "use_stereo"]:
-                        # 跳过这些配置参数，不是权重
                         continue
                     expected = model_dict[k].shape if (
                         k in model_dict and isinstance(model_dict[k], torch.Tensor)
@@ -1152,7 +1131,6 @@ class Trainer:
 
 
             # if k.endswith("conv1.weight") and v.shape[1] == 3:
-            #         # 自动适配 3通道预训练的conv1到 4/8通道
             #         print(f"Adapting {k} from shape {v.shape} to {model_dict[k].shape}")
             #         num_input_images = self.num_input_images  # e.g. 1 or 2
             #         rgb_weight = torch.cat([v] * num_input_images, dim=1) / num_input_images
