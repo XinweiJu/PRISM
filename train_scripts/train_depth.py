@@ -6,7 +6,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from trainer_edge import Trainer
+from Workspace_backup.PRISM.train_scripts.trainer_depth import Trainer
 from options import MonodepthOptions
 
 options = MonodepthOptions()

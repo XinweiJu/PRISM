@@ -1,6 +1,6 @@
 # train_xinwei_edge2.py
 
-from trainer_edge import Trainer
+from Workspace_backup.PRISM.train_scripts.trainer_edge import Trainer
 from options import MonodepthOptions
 import os
 from path_config import weights_path
