@@ -21,7 +21,7 @@ from torchvision import transforms, datasets
 from layers import disp_to_depth
 from utils import download_model_if_doesnt_exist
 import skimage.transform
-from evaluate_depth import STEREO_SCALE_FACTOR
+from Workspace_backup.PRISM.evaluate_scripts.evaluate_depth import STEREO_SCALE_FACTOR
 import datetime
 import csv
 import json

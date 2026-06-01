@@ -16,7 +16,7 @@ from layers import transformation_from_parameters
 from utils import readlines
 import networks
 from scipy.spatial.transform import Rotation as R, Slerp
-from depth_evaluate_max_norm import load_model  
+from Workspace_backup.PRISM.evaluate_scripts.depth_evaluate_max_norm import load_model  
 from path_config import data_path, generated_path, output_path, weights_path
 
 
