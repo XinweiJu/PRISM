@@ -10,14 +10,10 @@ PRISM trains monocular endoscopic depth and pose networks with RGB frames plus o
 
 ## Repository Layout
 
-- `train.py`, `trainer.py`: joint depth/pose training.
-- `train_depth.py`, `trainer_depth.py`: depth-focused training.
-- `train_edge.py`, `trainer_edge.py`: edge-guided training.
-- `train_edge_pose_from_scratch.py`: edge-guided training with pose initialized from a generic checkpoint.
-- `train_edge_pose_from_mod.py`: edge-guided training from an existing PRISM checkpoint.
-- `depth_evaluate_max_norm.py`: C3VD/Hamlyn-style depth prediction and evaluation.
-- `depth_evaluate_endomapper.py`, `depth_evaluate_endomapper_288.py`: EndoMapper-style depth prediction scripts.
-- `pose_predict_feast_v1.py`: pose prediction export.
+- `train_prism.py`: unified training entrypoint.
+- `predict_prism.py`: unified prediction/evaluation entrypoint.
+- `trainer.py`, `trainer_depth.py`, `trainer_edge.py`: training implementations used by `train_prism.py`.
+- `depth_evaluate_max_norm.py`, `depth_evaluate_endomapper.py`, `depth_evaluate_endomapper_288.py`, `pose_predict_feast_v1.py`: prediction/evaluation implementations used by `predict_prism.py`.
 - `datasets/`: KITTI-compatible loaders and the endoscopy loader.
 - `networks/`: PRISM/Monodepth2-style models with optional RGB+edge/shading input channels.
 - `networksIID/`, `networksMonoDepth2/`, `networksMonoVIT/`: ablation and baseline model variants.
@@ -134,7 +130,7 @@ The paper experiments used FEAST-style edge outputs and intrinsic-image-decompos
 Joint depth and pose training:
 
 ```bash
-python train.py \
+python train_prism.py --pipeline joint \
   --model_name prism_c3vd \
   --dataset hk \
   --data c3vd \
@@ -148,7 +144,7 @@ python train.py \
 Edge-guided training:
 
 ```bash
-python train_edge.py \
+python train_prism.py --pipeline edge \
   --model_name prism_c3vd_both_edge_ssim \
   --dataset hk \
   --data c3vd \
@@ -163,22 +159,32 @@ python train_edge.py \
 Depth-only and pose-only ablations:
 
 ```bash
-python train_depth.py --model_name prism_depth_edge_ssim --dataset hk --data c3vd --split c3vd_mysplit --png --training_mode depth
-python train_edge_pose_from_scratch.py --model_name prism_pose_edge_ssim --dataset hk --data c3vd --split c3vd_mysplit --png --training_mode pose
+python train_prism.py --pipeline depth --model_name prism_depth_edge_ssim --dataset hk --data c3vd --split c3vd_mysplit --png --training_mode depth
+python train_prism.py --pipeline edge_pose_scratch --model_name prism_pose_edge_ssim --dataset hk --data c3vd --split c3vd_mysplit --png --training_mode pose
 ```
 
 You can also store options in JSON:
 
 ```bash
-python train.py --config configs/prism_c3vd.json
+python train_prism.py --pipeline joint --config configs/prism_c3vd.json
 ```
+
+Available training pipelines:
+
+| Pipeline | Use case |
+| --- | --- |
+| `joint` | Standard joint depth/pose training. |
+| `edge` | Edge-guided training with `trainer_edge.py`. |
+| `depth` | Depth-focused training with `trainer_depth.py`. |
+| `edge_pose_scratch` | Edge-guided training where pose is initialized from a generic checkpoint. |
+| `edge_pose_resume` | Edge-guided training where depth and pose are initialized from an existing PRISM checkpoint. |
 
 ## Evaluation And Prediction
 
 C3VD/Hamlyn-style depth prediction/evaluation:
 
 ```bash
-python depth_evaluate_max_norm.py \
+python predict_prism.py depth-c3vd \
   --image_path data_folder/input_data/c3vd \
   --model_basepath weights \
   --model_name prism_c3vd/models/weights_19 \
@@ -199,13 +205,13 @@ data_folder/generated/endomapper/shading
 Then run:
 
 ```bash
-python depth_evaluate_endomapper.py
+python predict_prism.py depth-endomapper
 ```
 
 Pose prediction export:
 
 ```bash
-python pose_predict_feast_v1.py \
+python predict_prism.py pose-c3vd \
   --model_name prism_c3vd_both_edge_ssim \
   --weights_base weights \
   --output_base output_data/pose \
@@ -214,8 +220,18 @@ python pose_predict_feast_v1.py \
   --shading_root data_folder/generated/c3vd/shading
 ```
 
+Available prediction commands:
+
+| Command | Use case |
+| --- | --- |
+| `depth-c3vd` | Depth prediction/evaluation for C3VD-style folders. |
+| `depth-endomapper` | EndoMapper-style depth prediction at full output resolution. |
+| `depth-endomapper-288` | EndoMapper-style depth prediction at 288x288 output resolution. |
+| `pose-c3vd` | Pose prediction export for C3VD-style sequences. |
+
 ## Notes
 
 - Model names containing `depth_edge`, `pose_edge`, `both_edge`, `depth_lum`, `pose_lum`, `both_lum`, `dlpe`, or `depl` control whether the code loads extra edge/shading channels.
+- Legacy scripts (`train.py`, `train_depth.py`, `train_edge.py`, `train_edge_pose_from_scratch.py`, `train_edge_pose_from_mod.py`, `depth_evaluate_*.py`, and `pose_predict_feast_v1.py`) are kept for compatibility, but new runs should use `train_prism.py` and `predict_prism.py`.
 - `splits/` are kept because they are needed for training and evaluation. One-off split-generation scripts and notebook scratch files are not required for normal use.
 - Generated Python bytecode and cached files are intentionally excluded.
