@@ -3,21 +3,22 @@
 from trainer_edge import Trainer
 from options import MonodepthOptions
 import os
+from path_config import weights_path
 
 if __name__ == "__main__":
     options = MonodepthOptions()
     opts = options.parse()
 
     model_name = opts.model_name.replace("_edge_ssim_depth_fix_thorough_aug", "")
-    model_base = f"/Datasets/FEAST_Weights/Weights_Feast_all/monodepth/{model_name}/models/weights_19"
+    model_base = weights_path("monodepth", model_name, "models", "weights_19")
 
     opts.model_load_paths = {
         "encoder": f"{model_base}/encoder.pth",
         "depth": f"{model_base}/depth.pth",
         "pose_encoder": f"{model_base}/pose_encoder.pth",
         "pose": f"{model_base}/pose.pth",
-        # "pose_encoder": "/Datasets/Checkpoints/monodepth/mono_640x192/pose_encoder.pth",
-        # "pose": "/Datasets/Checkpoints/monodepth/mono_640x192/pose.pth",
+        # "pose_encoder": weights_path("checkpoints", "monodepth", "mono_640x192", "pose_encoder.pth"),
+        # "pose": weights_path("checkpoints", "monodepth", "mono_640x192", "pose.pth"),
     }
 
     trainer = Trainer(opts)

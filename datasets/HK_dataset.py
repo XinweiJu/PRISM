@@ -6,6 +6,7 @@ import PIL.Image as pil
 from .mono_dataset import MonoDataset
 import skimage.transform
 import torch
+from path_config import generated_path
 
 class HKInitDataset(MonoDataset):
     """Superclass for different types of KITTI dataset loaders
@@ -70,14 +71,11 @@ class HKDataset(HKInitDataset):
         return depth_gt
     
     def get_edge(self, folder, frame_index):
-        # print("folder", folder)
         edge_path = os.path.join(
-            '/Datasets/C3VD_Undistorted/Edge',
-            # '/Datasets/Hyper-Kvasir/BBPS-2-3Undistorted_Edge',
+            generated_path("c3vd", "edge"),
             folder,
             'avg',
             f"{frame_index:04d}_color.png.npy")
-        # print("edge_path", edge_path)
         edge = np.load(edge_path)  
 
         edge_resized = skimage.transform.resize(
@@ -86,13 +84,11 @@ class HKDataset(HKInitDataset):
         return edge_tensor
     
     def get_edge_hk(self, folder, frame_index):
-        # print("folder", folder)
         edge_path = os.path.join(
-            '/Datasets/Hyper-Kvasir/BBPS-2-3Undistorted_Edge',
+            generated_path("hk", "edge"),
             folder,
             'avg',
             f"{frame_index:05d}.png.npy")
-        # print("edge_path", edge_path)
         edge = np.load(edge_path)  
 
         edge_resized = skimage.transform.resize(
@@ -101,14 +97,11 @@ class HKDataset(HKInitDataset):
         return edge_tensor
     
     def get_lum(self, folder, frame_index):
-        # print("folder", folder)
         lum_path = os.path.join(
-            '/Datasets/C3VD_Undistorted/Shading/models/weights_19',
+            generated_path("c3vd", "shading"),
             folder,
             'decomposed',
             f"light{frame_index:04d}_color.png")
-        ## load png
-        # print("lum_path", lum_path)
         lum = pil.open(lum_path)
         lum = np.array(lum, dtype=np.float32) # this is 16bit depth
 
@@ -116,14 +109,11 @@ class HKDataset(HKInitDataset):
         return lum_tensor
     
     def get_lum_hk(self, folder, frame_index):
-        # print("folder", folder)
         lum_path = os.path.join(
-            '/Datasets/Hyper-Kvasir/BBPS-2-3Undistorted_Shading/models/weights_19',  ## IID/weights_19 should be used for lum_reflect training
+            generated_path("hk", "shading"),
             folder,
             'decomposed',
             f"light{frame_index:05d}.png")
-        ## load png
-        # print("lum_path", lum_path)
         lum = pil.open(lum_path)
         lum = np.array(lum, dtype=np.float32)
 

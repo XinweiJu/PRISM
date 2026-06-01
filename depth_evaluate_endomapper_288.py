@@ -26,6 +26,11 @@ import datetime
 import csv
 import json
 import random
+from path_config import data_path, generated_path, output_path, weights_path
+
+
+ENDOMAPPER_EDGE_ROOT = generated_path("endomapper", "edge")
+ENDOMAPPER_SHADING_ROOT = generated_path("endomapper", "shading")
 
 
 def load_monodepth2_model(channels_per_image_depth, channels_per_image_pose):
@@ -87,7 +92,7 @@ def load_model_safe(method, channels_per_image_depth, channels_per_image_pose, m
 def get_edge(folder_name, frame_index, feed_height, feed_width):
     """Get edge information for a specific frame"""
     filename = f"{folder_name}_{frame_index:03d}.png"
-    edge_path = os.path.join('/Datasets/EndoMapper/feast_eval/sample/Edge', filename + '.npy')
+    edge_path = os.path.join(ENDOMAPPER_EDGE_ROOT, filename + '.npy')
     if os.path.exists(edge_path):
         edge = np.load(edge_path)
         edge_resized = skimage.transform.resize(edge, (feed_height, feed_width), order=1, preserve_range=True, mode='constant')
@@ -99,9 +104,7 @@ def get_edge(folder_name, frame_index, feed_height, feed_width):
 def get_lum(folder_name, frame_index, feed_height, feed_width):
     """Get luminance information for a specific frame"""
     filename = f"{folder_name}_{frame_index:03d}.png"
-    lum_path = os.path.join(
-        '/Datasets/EndoMapper/feast_eval/sample/Shading/IID/finetuned_mono_hkfull_288_pseudo_dsms_automasking_noadjust',
-        f"light{filename}")
+    lum_path = os.path.join(ENDOMAPPER_SHADING_ROOT, f"light{filename}")
     if os.path.exists(lum_path):
         lum = pil.open(lum_path)
         lum = np.array(lum, dtype=np.float32)
@@ -134,7 +137,7 @@ def process_single_model(model_path, input_dir, output_root, ext='png', target_r
     """Process all images with a single model"""
     
     # Parse model information - use the full model path for better identification
-    full_model_name = model_path.replace('/Datasets/', '').replace('/', '_')
+    full_model_name = model_path.replace('/', '_').strip('_')
     model_name = os.path.basename(model_path)
     
     if 'monodepth' in model_path or 'IID' in model_path:
@@ -311,27 +314,11 @@ def process_single_model(model_path, input_dir, output_root, ext='png', target_r
             print(f"Saved colored: {colored_output_path}")
 
 def main():
-    # Define paths
-    input_dir = "/Datasets/EndoMapper/feast_eval/sample/Resized/to_eval"
-    output_root = "/Datasets/EndoMapper/feast_eval/sample/Depth_Output"
-    
-    # Define model list
+    input_dir = data_path("endomapper_288")
+    output_root = output_path("endomapper_depth_288")
+
     model_list = [
-        # "/Datasets/Weights_Baselines_finetune/monodepth/hkfull_mono_finetuned/models/weights_19",
-        # "/Datasets/Weights_Baselines_finetune/monodepth/c3vd_mono_finetuned/models/weights_19",
-        # "/Datasets/Weights_Baselines_finetune/monovit/hkfull_mono_finetuned/models/weights_19",
-        # "/Datasets/Weights_Baselines_finetune/monovit/c3vd_mono_finetuned/models/weights_19",
-        # "/Datasets/Weights_Baselines_finetune/monovit/c3vd_mysplit_interval30/models/weights_19",
-        # "/Datasets/weights/Baselines/AF-sfm/c3vd_w_pretrained/models/weights_19",
-        # "/Datasets/weights/Baselines/AF-sfm/c3vd30_w_pretrained/models/weights_19",
-        # '/Datasets/weights/Baselines/AF-sfm/hk_w_pretrained/models/weights_19',
-        # "/Datasets/weights/Baselines/iid-sfm/c3vd_w_pretrained/models/weights_19",
-        # "/Datasets/weights/Baselines/iid-sfm/c3vd30_w_pretrained/models/weights_19",
-        # '/Datasets/weights/Baselines/iid-sfm/hk_w_pretrained/models/weights_19',
-        # '/Datasets/weights/xinwei/IID_finetuned_mono_hkfull_288_pseudo_dsms_automasking_noadjust/weights_19',
-        "/Datasets/Weights_Feast_new/monodepth/hk_mono_finetuned_dlpe_edge_ssim_depth_fix/models/weights_29",
-        # "/Datasets/Weights_Feast_new/monodepth/hk_mono_finetuned_both_lum_edge_ssim_depth_fix/models/weights_19",
-        # "/Datasets/Weights_Feast_all/monodepth/hk_mono_finetuned_both_lum/models/weights_19"
+        weights_path("example_model", "models", "weights_19"),
     ]
     
     print(f"Input directory: {input_dir}")

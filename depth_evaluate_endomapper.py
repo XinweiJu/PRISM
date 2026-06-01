@@ -26,6 +26,11 @@ import datetime
 import csv
 import json
 import random
+from path_config import data_path, generated_path, output_path, weights_path
+
+
+ENDOMAPPER_EDGE_ROOT = generated_path("endomapper", "edge")
+ENDOMAPPER_SHADING_ROOT = generated_path("endomapper", "shading")
 
 
 def load_monodepth2_model(channels_per_image_depth, channels_per_image_pose, method='monodepth'):
@@ -95,7 +100,7 @@ def load_model_safe(method, channels_per_image_depth, channels_per_image_pose, m
 def get_edge(folder_name, frame_index, feed_height, feed_width):
     """Get edge information for a specific frame"""
     filename = f"{folder_name}_{frame_index:03d}.png"
-    edge_path = os.path.join('/Datasets/FEAST_Outputs/Outputs_Feast_new/Endomapper_main/sample/Edge/avg_resized', filename + '.npy')
+    edge_path = os.path.join(ENDOMAPPER_EDGE_ROOT, "avg_resized", filename + '.npy')
     if os.path.exists(edge_path):
         edge = np.load(edge_path)
         edge_resized = skimage.transform.resize(edge, (feed_height, feed_width), order=1, preserve_range=True, mode='constant')
@@ -107,9 +112,7 @@ def get_edge(folder_name, frame_index, feed_height, feed_width):
 def get_lum(folder_name, frame_index, feed_height, feed_width):
     """Get luminance information for a specific frame"""
     filename = f"{folder_name}_{frame_index:03d}.png"
-    lum_path = os.path.join(
-        '/Datasets/FEAST_Outputs/Outputs_Feast_new/Endomapper_main/sample/Shades',
-        f"light{filename}")
+    lum_path = os.path.join(ENDOMAPPER_SHADING_ROOT, f"light{filename}")
     if os.path.exists(lum_path):
         print(f"Loading luminance from {lum_path}")
         lum = pil.open(lum_path)
@@ -144,7 +147,7 @@ def process_single_model(model_path, input_dir, output_root, ext='png', target_r
     print(f"Processing model: {model_path} with method: {method}"
           f"\nInput directory: {input_dir}\nOutput root: {output_root}\nTarget resolution: {target_resolution}")
     # Parse model information - use the full model path for better identification
-    full_model_name = model_path.replace('/Datasets/', '').replace('/', '_')
+    full_model_name = model_path.replace('/', '_').strip('_')
     model_name = os.path.basename(model_path)
     
     print(f"\n=== Processing with model: {full_model_name} (method: {method}) ===")
@@ -316,63 +319,11 @@ def process_single_model(model_path, input_dir, output_root, ext='png', target_r
             print(f"Saved colored: {colored_output_path}")
 
 def main():
-    # Define paths
-    input_dir = "/Datasets/FEAST_Outputs/Outputs_Feast_new/Endomapper_main/sample/Undistorted"
-    # input_dir = "/Datasets/FEAST_Outputs/Outputs_Feast_new/Endomapper_main/sample/Resized/to_eval_check"
-    output_root = "/Datasets/Outputs_Feast_baseline_pretrained"
-    
-    # Dataset model list
-    # model_list = [
-    #     "/Datasets/Weights_Baselines_finetune/monodepth/hkfull_mono_finetuned/models/weights_19",
-    #     # "/Datasets/Weights_Baselines_finetune/monodepth/c3vd_mono_finetuned/models/weights_19",
-    #     # "/Datasets/Weights_Baselines_finetune/monodepth/c3vd_mysplit_interval30/models/weights_19",        
-    #     "/Datasets/Weights_Baselines_finetune/monovit/hkfull_mono_finetuned/models/weights_19",
-    #     # "/Datasets/Weights_Baselines_finetune/monovit/c3vd_mono_finetuned/models/weights_19",
-    #     # "/Datasets/Weights_Baselines_finetune/monovit/c3vd_mysplit_interval30/models/weights_19",
-    #     # "/Datasets/weights/Baselines/AF-sfm/c3vd_w_pretrained/models/weights_19",
-    #     # "/Datasets/weights/Baselines/AF-sfm/c3vd30_w_pretrained/models/weights_19",
-    #     '/Datasets/weights/Baselines/AF-sfm/hk_w_pretrained/models/weights_19',
-    #     # "/Datasets/weights/Baselines/iid-sfm/c3vd_w_pretrained/models/weights_19",
-    #     # "/Datasets/weights/Baselines/iid-sfm/c3vd30_w_pretrained/models/weights_19",
-    #     '/Datasets/weights/Baselines/iid-sfm/hk_w_pretrained/models/weights_19',
-    #     # '/Datasets/weights/xinwei/IID_finetuned_mono_hkfull_288_pseudo_dsms_automasking_noadjust/weights_19',
-    #     "/Datasets/Weights_Feast_new/monodepth/hk_mono_finetuned_dlpe_edge_ssim_depth_fix/models/weights_29",
-    #     "/Datasets/Weights_Feast_new/monodepth/hk_mono_finetuned_both_lum_edge_ssim_depth_fix/models/weights_19",
-    #     # "/Datasets/Weights_Feast_all/monodepth/hk_mono_finetuned_both_lum/models/weights_19"
-    # ]
-    
-#     /Datasets/Weights_dataset_compare/af-sfm_c3vd_mysplit_interval10  monodepth_c3vd_mysplit_interval10
-# af-sfm_hk_interval20            monodepth_hkfull_mono_finetuned
-# iid-sfm_c3vd30_w_pretrained     monovit_c3vd_mysplit_interval30
-# iid-sfm_hk_interval20           monovit_hkfull_mono_finetuned
-    # model_list = [
-    #     "/Datasets/Weights_dataset_compare/monodepth_c3vd_mysplit_interval10/models/weights_19",
-    #     "/Datasets/Weights_dataset_compare/monodepth_hkfull_mono_finetuned/models/weights_19",
-    #     "/Datasets/Weights_dataset_compare/monovit_c3vd_mysplit_interval30/models/weights_19",
-    #     "/Datasets/Weights_dataset_compare/monovit_hkfull_mono_finetuned/models/weights_19",
-    #     "/Datasets/Weights_dataset_compare/af-sfm_c3vd_mysplit_interval10/models/weights_19",
-    #     "/Datasets/Weights_dataset_compare/af-sfm_hk_interval20/models/weights_19",
-    #     "/Datasets/Weights_dataset_compare/iid-sfm_c3vd30_w_pretrained/models/weights_19",
-    #     "/Datasets/Weights_dataset_compare/iid-sfm_hk_interval20/models/weights_19",
-    # ]
+    input_dir = data_path("endomapper")
+    output_root = output_path("endomapper_depth")
 
-    # ablation models
-    
     model_list = [
-        # "/Datasets/FEAST_Weights/Weights_Feast_Dataset_Finetune_all/AF-sfm/c3vd_w_pretrained/models/weights_19",
-        # "/Datasets/FEAST_Weights/Weights_Feast_Dataset_Finetune_all/AF-sfm/hk_interval30/models/weights_19",
-        # "/Datasets/FEAST_Weights/Weights_Feast_Dataset_Finetune_all/iid-sfm/c3vd30_w_pretrained/models/weights_19",
-        # "/Datasets/FEAST_Weights/Weights_Feast_Dataset_Finetune_all/iid-sfm/hk_interval10/models/weights_19",
-        "/Datasets/FEAST_Weights/Weights_Feast_Dataset_Finetune_all/monovit/c3vd_mysplit_interval10/models/weights_19",
-        "/Datasets/FEAST_Weights/Weights_Feast_Dataset_Finetune_all/monovit/hkfull_mono_finetuned/models/weights_19",
-        # "/Datasets/Weights_from_rema/IID/finetuned_mono_hkfull_288_pseudo_dsms_automasking_noadjust/models/weights_19",
-        # "/Datasets/Weights_from_rema/IID/finetuned_mono_hkfull_288_pseudo_dsms_automasking/models/weights_19",
-        # "/Datasets/Checkpoints/af-sfm",
-        # "/Datasets/Checkpoints/iid-sfm",
-        # "/Datasets/FEAST_Weights/Weights_Feast_all/monodepth/hk_mono_finetuned_dlpe",
-        # "/Datasets/FEAST_Weights/Weights_Feast_new/monodepth_depth_fix_thorough_pose_from_scratch/hk_mono_finetuned_dlpe_edge_ssim/models/weights_19",
-        # "/Datasets/Weights_Feast_new/monodepth/hk_mono_finetuned_pose_edge_edge_ssim/models/weights_19",
-        # "/Datasets/Weights_Feast_new/monodepth/hk_mono_finetuned_pose_lum_edge_ssim/models/weights_19",
+        weights_path("example_model", "models", "weights_19"),
     ]
 
     print(f"Input directory: {input_dir}")

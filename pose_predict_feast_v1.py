@@ -17,6 +17,7 @@ from utils import readlines
 import networks
 from scipy.spatial.transform import Rotation as R, Slerp
 from depth_evaluate_max_norm import load_model  
+from path_config import data_path, generated_path, output_path, weights_path
 
 
 
@@ -103,18 +104,22 @@ def load_model(channels_per_image_depth, channels_per_image_pose, method="monode
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, required=True,
-                        help="Name of the model folder under /Datasets/Weights_Feast_compare/")
-    parser.add_argument("--weights_base", type=str, default="/Datasets/Weights_Feast_compare",
+                        help="Name of the model folder under --weights_base")
+    parser.add_argument("--weights_base", type=str, default=weights_path(),
                         help="Base path to model weights")
-    parser.add_argument("--output_base", type=str, default="/Datasets/Weights_Feast_compare/Pose_Output",
+    parser.add_argument("--output_base", type=str, default=output_path("pose"),
                         help="Base path for saving pose predictions")
-    parser.add_argument("--data_path", type=str, default="/raid/xinwei/dataset/c3vd/registered_sequences",
+    parser.add_argument("--data_path", type=str, default=data_path("c3vd_registered_sequences"),
                         help="Path to the C3VD dataset")
     parser.add_argument("--split_file_root", type=str, default="splits/c3vd/test_files_interval{}.txt",
                         help="Path format for test file list")
     parser.add_argument("--num_interpolations", type=int, default=10,
                         help="Number of intermediate frames to interpolate")
     parser.add_argument("--method", type=str, default="monodepth")
+    parser.add_argument("--edge_root", type=str, default=generated_path("c3vd", "edge"),
+                        help="root folder for generated edge maps")
+    parser.add_argument("--shading_root", type=str, default=generated_path("c3vd", "shading"),
+                        help="root folder for generated shading/luminance maps")
     return parser.parse_args()
 
 
@@ -155,12 +160,12 @@ def run_pose_prediction_on_video(args, video_name):
         return transforms.ToTensor()(image)
 
     def get_edge(folder, idx):
-        path = os.path.join('/Datasets/C3VD_Undistorted/Edge', folder, 'avg', f"{idx:04d}_color.png.npy")
+        path = os.path.join(args.edge_root, folder, 'avg', f"{idx:04d}_color.png.npy")
         edge = np.load(path)
         return torch.tensor(edge, dtype=torch.float32).unsqueeze(0)
 
     def get_lum(folder, idx):
-        path = os.path.join('/Datasets/C3VD_Undistorted/Shading/models/weights_19', folder, 'decomposed', f"light{idx:04d}_color.png")
+        path = os.path.join(args.shading_root, folder, 'decomposed', f"light{idx:04d}_color.png")
         lum = np.array(Image.open(path)).astype(np.float32)
         return torch.tensor(lum, dtype=torch.float32).unsqueeze(0)
 
@@ -205,44 +210,5 @@ def run_pose_prediction_on_video(args, video_name):
 
 
 if __name__ == "__main__":
-    base_model_path = "/Datasets"
-
-    # model_list = sorted([
-    #     m for m in os.listdir(base_model_path)
-    #     if os.path.isdir(os.path.join(base_model_path, m))
-    #     and m not in ["Depth_Output", "Pose_Output"]
-    # ])
-    # model_list = ['FEAST_Weights/Weights_Feast_new/monodepth_depth_fix_thorough_pose_from_scratch/hk_mono_finetuned_dlpe_edge_ssim/models/weights_19',
-                #   'FEAST_Weights/Weights_Feast_Dataset_Finetune_all/AF-sfm/hk_w_pretrained/models/weights_19',
-                #   'FEAST_Weights/Weights_Feast_Dataset_Finetune_all/iid-sfm/hk_w_pretrained/models/weights_19', 
-                #   '/Datasets/Checkpoints/af-sfm',
-                #   '/Datasets/Checkpoints/iid-sfm'
-                #   ]
-
-    model_list = ["/Datasets/Weights_FEAST/Weights_Feast_Dataset_Finetune_all/monodepth/c3vd_mono_finetuned",
-                  "/Datasets/Weights_FEAST/Weights_Feast_Dataset_Finetune_all/monodepth/c3vd_mysplit_interval10"]
-
-    # model_list = ["Weights_FEAST/Weights_Feast_Dataset_Finetune_all/AF-sfm/c3vd_w_pretrained",
-    #               "/Datasets/Weights_FEAST/Weights_Feast_Dataset_Finetune_all/iid-sfm/c3vd_w_pretrained",
-    #               "/Datasets/Weights_FEAST/Weights_Feast_Dataset_Finetune_all/monodepth/c3vd_mysplit_finetuned",
-    #               "/Datasets/Weights_FEAST/Weights_Feast_Dataset_Finetune_all/monovit/c3vd_mysplit_finetuned"]
-    
-    print(f"Model list: {model_list}")
-
-    video_list = ["trans_t4_b", "sigmoid_t3_b", "desc_t4_a", "cecum_t4_b", "cecum_t1_a"]
-
-    for model_name in model_list:
-        print(f"\n===> Running: {model_name}")
-        import argparse
-
-        args = argparse.Namespace(
-            model_name=model_name,
-            weights_base=base_model_path,
-            output_base='/Workspace/KeyFrameGraph/Outputs',
-            data_path="/Datasets/C3VD_Undistorted/Dataset",
-            # split_file_root="splits/c3vd/test_files_interval{}.txt",
-            method = "monodepth",
-        )
-
-        for video in video_list:
-            run_pose_prediction_on_video(args, video)
+    args = parse_args()
+    run_pose_prediction_on_video(args, video_name="cecum_t1_a")

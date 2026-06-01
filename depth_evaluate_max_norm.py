@@ -26,6 +26,7 @@ import datetime
 import csv
 import json
 import random
+from path_config import generated_path
 
 def set_seed(seed=42):
     random.seed(seed)
@@ -160,6 +161,12 @@ def parse_args():
     parser.add_argument("--notclipped", action='store_true',
                         help='skip clipping depth values')
     parser.add_argument("--input_mask", type=str, default=None,)
+    parser.add_argument("--edge_root", type=str,
+                        default=generated_path("c3vd", "edge"),
+                        help="root folder for generated edge maps")
+    parser.add_argument("--shading_root", type=str,
+                        default=generated_path("c3vd", "shading"),
+                        help="root folder for generated shading/luminance maps")
 
     return parser.parse_args()
 
@@ -246,15 +253,14 @@ def test_simple(args, seq):
 
     def get_edge(folder, frame_index):
         edge_path = os.path.join(
-            '/Datasets/C3VD_Undistorted/Edge', folder, 'avg', f"{frame_index:04d}_color.png.npy")
+            args.edge_root, folder, 'avg', f"{frame_index:04d}_color.png.npy")
         edge = np.load(edge_path)
         edge_resized = skimage.transform.resize(edge, (feed_height, feed_width), order=1, preserve_range=True, mode='constant')
         return torch.tensor(edge_resized, dtype=torch.float32).unsqueeze(0)
 
     def get_lum(folder, frame_index):
         lum_path = os.path.join(
-            '/Datasets/C3VD_Undistorted/Shading/models/weights_19',
-            folder, 'decomposed', f"light{frame_index:04d}_color.png")
+            args.shading_root, folder, 'decomposed', f"light{frame_index:04d}_color.png")
         lum = pil.open(lum_path)
         lum = np.array(lum, dtype=np.float32)
         return torch.tensor(lum, dtype=torch.float32).unsqueeze(0)
