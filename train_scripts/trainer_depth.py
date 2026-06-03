@@ -259,7 +259,8 @@ class Trainer:
         if not isinstance(self.opt.split, list):
             self.opt.split = [self.opt.split]
             
-        fpath = [os.path.join(os.path.dirname(__file__), "splits", split, "{}_files.txt") for split in self.opt.split]        
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        fpath = [os.path.join(repo_root, "splits", split, "{}_files.txt") for split in self.opt.split]
         img_ext = '.png' if self.opt.png else '.jpg'
         # it is ok if the list is random, in mono_dataset this will be dealt with using folder and frame_index
         # but i sort them eitherway for the validation and training list to be the same frames from each augmentation

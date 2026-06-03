@@ -16,7 +16,7 @@ from layers import transformation_from_parameters
 from utils import readlines
 import networks
 from scipy.spatial.transform import Rotation as R, Slerp
-from Workspace_backup.PRISM.evaluate_scripts.depth_evaluate_max_norm import load_model  
+from evaluate_scripts.depth_evaluate_max_norm import load_model
 from path_config import data_path, generated_path, output_path, weights_path
 
 
@@ -111,7 +111,7 @@ def parse_args():
                         help="Base path for saving pose predictions")
     parser.add_argument("--data_path", type=str, default=data_path("c3vd_registered_sequences"),
                         help="Path to the C3VD dataset")
-    parser.add_argument("--split_file_root", type=str, default="splits/c3vd/test_files_interval{}.txt",
+    parser.add_argument("--split_file_root", type=str, default="splits/c3vd_mysplit_interval{}/test_files.txt",
                         help="Path format for test file list")
     parser.add_argument("--num_interpolations", type=int, default=10,
                         help="Number of intermediate frames to interpolate")

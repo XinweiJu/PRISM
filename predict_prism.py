@@ -7,15 +7,15 @@ import sys
 
 COMMANDS = {
     "depth-c3vd": {
-        "module": "depth_evaluate_max_norm",
+        "module": "evaluate_scripts.depth_evaluate_max_norm",
         "help": "depth prediction/evaluation for C3VD or C3VD-style folders",
     },
     "depth-endomapper": {
-        "module": "depth_evaluate_endomapper",
+        "module": "evaluate_scripts.depth_evaluate_endomapper",
         "help": "EndoMapper-style depth prediction at full output resolution",
     },
     "depth-endomapper-288": {
-        "module": "depth_evaluate_endomapper_288",
+        "module": "evaluate_scripts.depth_evaluate_endomapper_288",
         "help": "EndoMapper-style depth prediction at 288x288 output resolution",
     },
     "pose-c3vd": {

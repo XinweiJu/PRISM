@@ -12,8 +12,10 @@ PRISM trains monocular endoscopic depth and pose networks with RGB frames plus o
 
 - `train_prism.py`: unified training entrypoint.
 - `predict_prism.py`: unified prediction/evaluation entrypoint.
-- `trainer.py`, `trainer_depth.py`, `trainer_edge.py`: training implementations used by `train_prism.py`.
-- `depth_evaluate_max_norm.py`, `depth_evaluate_endomapper.py`, `depth_evaluate_endomapper_288.py`, `pose_predict_feast_v1.py`: prediction/evaluation implementations used by `predict_prism.py`.
+- `trainer.py`: default joint training implementation used by `train_prism.py`.
+- `train_scripts/`: depth-only, edge-guided, and legacy training scripts plus their trainers.
+- `evaluate_scripts/`: depth prediction/evaluation implementations used by `predict_prism.py`.
+- `pose_predict_feast_v1.py`: pose prediction exporter used by `predict_prism.py`.
 - `datasets/`: KITTI-compatible loaders and the endoscopy loader.
 - `networks/`: PRISM/Monodepth2-style models with optional RGB+edge/shading input channels.
 - `networksIID/`, `networksMonoDepth2/`, `networksMonoVIT/`: ablation and baseline model variants.
@@ -163,7 +165,7 @@ python train_prism.py --pipeline depth --model_name prism_depth_edge_ssim --data
 python train_prism.py --pipeline edge_pose_scratch --model_name prism_pose_edge_ssim --dataset hk --data c3vd --split c3vd_mysplit --png --training_mode pose
 ```
 
-You can also store options in JSON:
+You can also store options in JSON. Create a config file such as `configs/prism_c3vd.json`, then run:
 
 ```bash
 python train_prism.py --pipeline joint --config configs/prism_c3vd.json
@@ -174,8 +176,8 @@ Available training pipelines:
 | Pipeline | Use case |
 | --- | --- |
 | `joint` | Standard joint depth/pose training. |
-| `edge` | Edge-guided training with `trainer_edge.py`. |
-| `depth` | Depth-focused training with `trainer_depth.py`. |
+| `edge` | Edge-guided training with `train_scripts/trainer_edge.py`. |
+| `depth` | Depth-focused training with `train_scripts/trainer_depth.py`. |
 | `edge_pose_scratch` | Edge-guided training where pose is initialized from a generic checkpoint. |
 | `edge_pose_resume` | Edge-guided training where depth and pose are initialized from an existing PRISM checkpoint. |
 
@@ -234,4 +236,5 @@ Available prediction commands:
 - Model names containing `depth_edge`, `pose_edge`, `both_edge`, `depth_lum`, `pose_lum`, `both_lum`, `dlpe`, or `depl` control whether the code loads extra edge/shading channels.
 - Legacy scripts (`train.py`, `train_depth.py`, `train_edge.py`, `train_edge_pose_from_scratch.py`, `train_edge_pose_from_mod.py`, `depth_evaluate_*.py`, and `pose_predict_feast_v1.py`) are kept for compatibility, but new runs should use `train_prism.py` and `predict_prism.py`.
 - `splits/` are kept because they are needed for training and evaluation. One-off split-generation scripts and notebook scratch files are not required for normal use.
+- `networksMonoDepth2/` is kept as an archived Monodepth2 baseline implementation; the default PRISM commands do not import it directly.
 - Generated Python bytecode and cached files are intentionally excluded.

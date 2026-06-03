@@ -8,6 +8,10 @@ from __future__ import absolute_import, division, print_function
 
 import os
 import sys
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 import glob
 import argparse
 import numpy as np
@@ -21,7 +25,7 @@ from torchvision import transforms, datasets
 from layers import disp_to_depth
 from utils import download_model_if_doesnt_exist
 import skimage.transform
-from Workspace_backup.PRISM.evaluate_scripts.evaluate_depth import STEREO_SCALE_FACTOR
+from evaluate_scripts.evaluate_depth import STEREO_SCALE_FACTOR
 import datetime
 import csv
 import json
