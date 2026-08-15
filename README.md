@@ -1,49 +1,52 @@
-# PRISM
+# PRISM / DLPE
 
-Official code for **"Multi-Modal Monocular Endoscopic Depth and Pose Estimation with Edge-Guided Self-Supervision"**.
+Code for **Multi-Modal Monocular Endoscopic Depth and Pose Estimation with Edge-Guided Self-Supervision**.
 
-PRISM trains monocular endoscopic depth and pose networks with RGB frames plus optional edge and shading/luminance cues.
+The canonical DLPE configuration uses RGB + shading/luminance for the depth branch and RGB + edge for the pose branch. This repository contains the depth/pose training code and reference inference code. The IID shading generator and DexiNed/SegCol edge generator are external preprocessing dependencies; their network implementations and checkpoints are not bundled here.
 
 ![PRISM structure](_Structure.png)
 
-![Qualitative results](Main_qualitative_031026_w_shading.png)
+## What is kept
 
-## Repository Layout
+```text
+PRISM/
+├── train_prism.py          # supported training entrypoint
+├── trainer.py              # stage-2 joint depth/pose trainer
+├── options.py              # shared command-line/config options
+├── path_config.py          # portable data/weight/output roots
+├── datasets/               # endoscopy and KITTI-compatible loaders
+├── networks/               # canonical ResNet/Monodepth2-style PRISM model
+├── splits/                 # reproducible train/validation/test lists
+├── reference/              # inference and evaluation code
+│   ├── depth/
+│   └── pose_predict_feast_v1.py
+└── ablations/              # optional baselines and specialist trainers
+    ├── networks/
+    │   ├── iid/
+    │   ├── monodepth2/
+    │   └── monovit/
+    └── training/
+        ├── trainer_depth.py
+        └── trainer_edge.py
+```
 
-- `train_prism.py`: unified training entrypoint.
-- `predict_prism.py`: unified prediction/evaluation entrypoint.
-- `trainer.py`: default joint training implementation used by `train_prism.py`.
-- `train_scripts/`: depth-only, edge-guided, and legacy training scripts plus their trainers.
-- `evaluate_scripts/`: depth prediction/evaluation implementations used by `predict_prism.py`.
-- `pose_predict_feast_v1.py`: pose prediction exporter used by `predict_prism.py`.
-- `datasets/`: KITTI-compatible loaders and the endoscopy loader.
-- `networks/`: PRISM/Monodepth2-style models with optional RGB+edge/shading input channels.
-- `networksIID/`, `networksMonoDepth2/`, `networksMonoVIT/`: ablation and baseline model variants.
-- `splits/`: train/validation/test file lists.
+The old duplicate `train*.py` wrappers are not part of the maintained API. Use `train_prism.py` for all runs. During this cleanup they were moved, without deletion, to `/home/xju/Workspace/PRISM-archive-20260811/legacy_training_entrypoints/`.
 
-## Setup
+## Environment
 
-Create an environment with PyTorch, then install dependencies:
+Create a Python environment with a CUDA-compatible PyTorch build, then install:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-MonoViT paths require `mmcv`, `mmengine`, `mmsegmentation`, `timm`, and `einops`. The Monodepth2-style PRISM path mainly uses PyTorch, torchvision, numpy, Pillow, scikit-image, scikit-learn, scipy, matplotlib, IPython, and tensorboardX.
+The default PRISM path needs PyTorch, torchvision, NumPy, Pillow, OpenCV, SciPy, scikit-image, scikit-learn and tensorboardX. To reproduce the MonoViT ablation and install its additional packages, use:
 
-## Paths
-
-The code defaults to generic local folders:
-
-```text
-data_folder/
-  input_data/
-  generated/
-weights/
-output_data/
+```bash
+pip install -r ablations/requirements.txt
 ```
 
-You can either use those folders or set environment variables:
+Datasets, generated modalities and checkpoints are deliberately not committed. Configure their roots with:
 
 ```bash
 export PRISM_DATA_ROOT=/path/to/data_folder
@@ -51,190 +54,115 @@ export PRISM_WEIGHTS_ROOT=/path/to/weights
 export PRISM_OUTPUT_ROOT=/path/to/output_data
 ```
 
-More specific overrides are also supported:
+The more specific variables `PRISM_DATA_PATH`, `PRISM_GENERATED_PATH`, `PRISM_WEIGHTS_PATH`, and `PRISM_OUTPUT_PATH` override individual locations.
 
-```bash
-export PRISM_DATA_PATH=/path/to/input_data
-export PRISM_GENERATED_PATH=/path/to/generated
-export PRISM_WEIGHTS_PATH=/path/to/weights
-export PRISM_OUTPUT_PATH=/path/to/output_data
-```
+## Training code
 
-## Data Preparation
+PRISM uses the following three-stage workflow:
 
-Use this structure for C3VD-style data:
+1. Pre-generate shading/luminance and edge maps with the external IID and edge models.
+2. Jointly train depth and pose with `trainer.py`.
+3. Load the joint checkpoint, freeze the depth encoder/decoder, and fine-tune pose with the specialist trainer in `ablations/training/`.
 
-```text
-data_folder/
-  input_data/
-    c3vd/
-      sequence_name/
-        0000_color.png
-        0000_depth.tiff
-        0001_color.png
-        ...
-  generated/
-    c3vd/
-      edge/
-        sequence_name/
-          avg/
-            0000_color.png.npy
-      shading/
-        sequence_name/
-          decomposed/
-            light0000_color.png
-```
+### 1. Prepare modalities
 
-Use this structure for Hyper-Kvasir/Hamlyn-style data:
+For an RGB image such as `sequence/00001.jpg`, the loaders expect generated modalities under the configured generated-data root. Representative layouts are:
 
 ```text
-data_folder/
-  input_data/
-    hk/
-      sequence_name/
-        00001.jpg
-        00002.jpg
-        ...
-  generated/
-    hk/
-      edge/
-        sequence_name/
-          avg/
-            00001.png.npy
-      shading/
-        sequence_name/
-          decomposed/
-            light00001.png
+generated/
+├── hk/
+│   ├── edge/sequence/avg/00001.png.npy
+│   └── shading/sequence/decomposed/light00001.png
+└── c3vd/
+    ├── edge/sequence/avg/0000_color.png.npy
+    └── shading/sequence/decomposed/light0000_color.png
 ```
 
-The split files can contain absolute paths or paths matching your mounted data. For a portable release, prefer paths under `data_folder/input_data/...`.
+Check the selected split and `datasets/HK_dataset.py` before launching a new dataset because naming conventions differ between HK, C3VD and EndoMapper exports.
 
-## Generate Edge And Shading Inputs
-
-PRISM expects edge maps as `.npy` files and shading/luminance maps as image files. Generate them before training any model whose name uses `edge`, `lum`, `dlpe`, or `depl`.
-
-Example edge output for C3VD:
-
-```text
-data_folder/generated/c3vd/edge/sequence_name/avg/0000_color.png.npy
-```
-
-Example shading output for C3VD:
-
-```text
-data_folder/generated/c3vd/shading/sequence_name/decomposed/light0000_color.png
-```
-
-The paper experiments used FEAST-style edge outputs and intrinsic-image-decomposition shading outputs. If you use a different edge or shading method, keep the same filenames and folder layout or pass explicit roots to the prediction scripts with `--edge_root` and `--shading_root`.
-
-## Training
-
-Joint depth and pose training:
+### 2. Joint depth/pose training
 
 ```bash
 python train_prism.py --pipeline joint \
-  --model_name prism_c3vd \
-  --dataset hk \
-  --data c3vd \
-  --split c3vd_mysplit \
-  --height 288 \
-  --width 288 \
-  --png \
-  --training_mode both
+  --model_name hk_mono_finetuned_dlpe_edge_ssim \
+  --dataset hk --data hk --split hk \
+  --height 288 --width 288 \
+  --training_mode both --edge_loss
 ```
 
-Edge-guided training:
+The modality convention encoded by the trainers is:
+
+| Model-name token | Depth input | Pose input |
+| --- | --- | --- |
+| `dlpe` | RGB + luminance | RGB + edge |
+| `depl` | RGB + edge | RGB + luminance |
+| `both_edge` | RGB + edge | RGB + edge |
+| `both_lum` | RGB + luminance | RGB + luminance |
+| `depth_edge` / `depth_lum` | selected extra depth channel | RGB |
+| `pose_edge` / `pose_lum` | RGB | selected extra pose channel |
+
+These strings are functional configuration, not merely experiment labels; do not rename a checkpoint without preserving the corresponding modality choice.
+
+### 3. Freeze depth and fine-tune pose
+
+Use `edge_pose_resume` to load the joint checkpoint and invoke the frozen-depth pose trainer:
 
 ```bash
-python train_prism.py --pipeline edge \
-  --model_name prism_c3vd_both_edge_ssim \
-  --dataset hk \
-  --data c3vd \
-  --split c3vd_mysplit_interval10 \
-  --height 288 \
-  --width 288 \
-  --png \
-  --training_mode both \
-  --edge_loss
+python train_prism.py --pipeline edge_pose_resume \
+  --model_name hk_mono_finetuned_dlpe_edge_ssim_depth_fix_thorough_aug \
+  --dataset hk --data hk --split hk \
+  --height 288 --width 288 \
+  --training_mode pose --edge_loss
 ```
 
-Depth-only and pose-only ablations:
+`edge_pose_scratch` initializes the pose branch from the generic Monodepth2 pose checkpoint instead. The legacy `depth` and `edge` pipeline aliases remain available for reproducing older experiments, but both specialist trainers freeze depth and optimize pose; they are not depth-only trainers despite the historical filename `trainer_depth.py`.
 
-```bash
-python train_prism.py --pipeline depth --model_name prism_depth_edge_ssim --dataset hk --data c3vd --split c3vd_mysplit --png --training_mode depth
-python train_prism.py --pipeline edge_pose_scratch --model_name prism_pose_edge_ssim --dataset hk --data c3vd --split c3vd_mysplit --png --training_mode pose
-```
+Options may also be stored in JSON and passed with `--config path/to/config.json`. Command-line values override the corresponding defaults according to `options.py`.
 
-You can also store options in JSON. Create a config file such as `configs/prism_c3vd.json`, then run:
+## Reference code
 
-```bash
-python train_prism.py --pipeline joint --config configs/prism_c3vd.json
-```
+`predict_prism.py` is the supported dispatcher. The implementation modules live under `reference/` so they are separated from training code.
 
-Available training pipelines:
-
-| Pipeline | Use case |
-| --- | --- |
-| `joint` | Standard joint depth/pose training. |
-| `edge` | Edge-guided training with `train_scripts/trainer_edge.py`. |
-| `depth` | Depth-focused training with `train_scripts/trainer_depth.py`. |
-| `edge_pose_scratch` | Edge-guided training where pose is initialized from a generic checkpoint. |
-| `edge_pose_resume` | Edge-guided training where depth and pose are initialized from an existing PRISM checkpoint. |
-
-## Evaluation And Prediction
-
-C3VD/Hamlyn-style depth prediction/evaluation:
+Depth inference/evaluation for C3VD-style folders:
 
 ```bash
 python predict_prism.py depth-c3vd \
-  --image_path data_folder/input_data/c3vd \
-  --model_basepath weights \
-  --model_name prism_c3vd/models/weights_19 \
-  --output_path output_data/depth \
-  --eval \
-  --edge_root data_folder/generated/c3vd/edge \
-  --shading_root data_folder/generated/c3vd/shading
+  --image_path /path/to/c3vd \
+  --model_basepath /path/to/weights \
+  --model_name experiment/models/weights_19 \
+  --output_path /path/to/output \
+  --edge_root /path/to/generated/edge \
+  --shading_root /path/to/generated/shading \
+  --eval
 ```
 
-EndoMapper-style depth prediction uses:
-
-```text
-data_folder/input_data/endomapper
-data_folder/generated/endomapper/edge
-data_folder/generated/endomapper/shading
-```
-
-Then run:
+Other maintained dispatch commands are:
 
 ```bash
-python predict_prism.py depth-endomapper
+python predict_prism.py depth-endomapper [arguments...]
+python predict_prism.py depth-endomapper-288 [arguments...]
+python predict_prism.py pose-c3vd [arguments...]
 ```
 
-Pose prediction export:
+Run `python predict_prism.py COMMAND --help` to see the arguments implemented by a reference module. Checkpoints are expected to contain the usual `encoder.pth`, `depth.pth`, `pose_encoder.pth`, and `pose.pth` files as required by the selected command.
 
-```bash
-python predict_prism.py pose-c3vd \
-  --model_name prism_c3vd_both_edge_ssim \
-  --weights_base weights \
-  --output_base output_data/pose \
-  --data_path data_folder/input_data/c3vd \
-  --edge_root data_folder/generated/c3vd/edge \
-  --shading_root data_folder/generated/c3vd/shading
-```
+## Ablations
 
-Available prediction commands:
+`ablations/` is intentionally importable but is not the default code path:
 
-| Command | Use case |
-| --- | --- |
-| `depth-c3vd` | Depth prediction/evaluation for C3VD-style folders. |
-| `depth-endomapper` | EndoMapper-style depth prediction at full output resolution. |
-| `depth-endomapper-288` | EndoMapper-style depth prediction at 288x288 output resolution. |
-| `pose-c3vd` | Pose prediction export for C3VD-style sequences. |
+- `ablations/networks/iid`: historical IID-compatible encoder/decoders used by reference comparisons.
+- `ablations/networks/monodepth2`: archived plain Monodepth2 baseline.
+- `ablations/networks/monovit`: optional MonoViT backbone.
+- `ablations/training`: frozen-depth pose fine-tuning implementations used by stage 3 and older edge-loss experiments.
 
-## Notes
+Track-point, five-channel, optical-flow, C3VD fine-tuning and CLiMB submission experiments are not mixed into this original repository. They remain in the separate `PRISM-CLiMB` workspace, which prevents challenge-specific code from silently changing the reference DLPE implementation.
 
-- Model names containing `depth_edge`, `pose_edge`, `both_edge`, `depth_lum`, `pose_lum`, `both_lum`, `dlpe`, or `depl` control whether the code loads extra edge/shading channels.
-- Legacy scripts (`train.py`, `train_depth.py`, `train_edge.py`, `train_edge_pose_from_scratch.py`, `train_edge_pose_from_mod.py`, `depth_evaluate_*.py`, and `pose_predict_feast_v1.py`) are kept for compatibility, but new runs should use `train_prism.py` and `predict_prism.py`.
-- `splits/` are kept because they are needed for training and evaluation. One-off split-generation scripts and notebook scratch files are not required for normal use.
-- `networksMonoDepth2/` is kept as an archived Monodepth2 baseline implementation; the default PRISM commands do not import it directly.
-- Generated Python bytecode and cached files are intentionally excluded.
+## Reproducibility notes
+
+- Image height and width must be multiples of 32.
+- A checkpoint's behavior depends on both its tensors and the model-name modality token.
+- Preserve the exact preprocessing checkpoint and generated edge/shading files used for an experiment.
+- Split files may contain absolute paths from the original machine; inspect them before reuse.
+- Outputs, weights, datasets, caches and logs are ignored by Git.
+
+![Qualitative results](Main_qualitative_031026_w_shading.png)

@@ -135,7 +135,7 @@ class Trainer:
             self.models["depth"] = networks.DepthDecoder(
             self.models["encoder"].num_ch_enc, self.opt.scales)
         elif options.method == "monovit":
-            import networksMonoVIT as networksvit
+            from ablations.networks import monovit as networksvit
             self.models["encoder"] = networksvit.mpvit_small()
             self.models["encoder"].to(self.device)
             self.models["depth"] = networksvit.DepthDecoder()

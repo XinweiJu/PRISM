@@ -25,7 +25,7 @@ from torchvision import transforms, datasets
 from layers import disp_to_depth
 from utils import download_model_if_doesnt_exist
 import skimage.transform
-from evaluate_scripts.evaluate_depth import STEREO_SCALE_FACTOR
+from reference.depth.evaluate_depth import STEREO_SCALE_FACTOR
 import datetime
 import csv
 import json
@@ -46,7 +46,7 @@ def load_monodepth2_model(channels_per_image_depth, channels_per_image_pose, met
         depth_decoder = networks.DepthDecoder(
             num_ch_enc=encoder.num_ch_enc, scales=range(4))
     elif method == 'IID':
-        import networksIID
+        from ablations.networks import iid as networksIID
         print("   Loading pretrained encoder")
         encoder = networksIID.ResnetEncoder(18, False)
         print("   Loading pretrained decoder")
@@ -55,7 +55,7 @@ def load_monodepth2_model(channels_per_image_depth, channels_per_image_pose, met
     return encoder, depth_decoder, None, None
 
 def load_monovit_model_hr(depth_decoder_path, device):
-    import networksMonoVIT as networks
+    from ablations.networks import monovit as networks
     depth_dict = torch.load(depth_decoder_path, map_location=device)
     feed_height = depth_dict['height']
     feed_width = depth_dict['width']
@@ -68,7 +68,7 @@ def load_monovit_model_hr(depth_decoder_path, device):
     return None, depth_decoder, feed_height, feed_width
 
 def load_monovit_model_lr():
-    import networksMonoVIT as networks
+    from ablations.networks import monovit as networks
     print("   Loading pretrained encoder")
     encoder = networks.mpvit_small()
     encoder.num_ch_enc = [64,128,216,288,288]

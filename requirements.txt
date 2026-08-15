@@ -1,9 +1,5 @@
-einops
 ipython
 matplotlib
-mmcv
-mmengine
-mmsegmentation
 numpy
 opencv-python
 pillow
@@ -11,6 +7,5 @@ scikit-image
 scikit-learn
 scipy
 tensorboardX
-timm
 torch
 torchvision

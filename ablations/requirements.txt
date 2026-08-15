@@ -1,0 +1,8 @@
+-r ../requirements.txt
+
+# Optional MonoViT ablation dependencies
+einops
+mmcv
+mmengine
+mmsegmentation
+timm

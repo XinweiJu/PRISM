@@ -10,8 +10,8 @@ from path_config import weights_path
 
 PIPELINES = {
     "joint": "standard joint depth/pose training with trainer.py",
-    "edge": "edge-guided training with train_scripts/trainer_edge.py",
-    "depth": "depth-focused training with train_scripts/trainer_depth.py",
+    "edge": "stage-3 edge-guided pose fine-tuning with frozen depth",
+    "depth": "legacy stage-3 pose fine-tuning with frozen depth",
     "edge_pose_scratch": "edge-guided training with pose initialized from a generic checkpoint",
     "edge_pose_resume": "edge-guided training with depth and pose initialized from a PRISM checkpoint",
 }
@@ -79,9 +79,9 @@ def configure_preload(opts, pipeline):
 
 def trainer_for_pipeline(pipeline):
     if pipeline == "depth":
-        from train_scripts.trainer_depth import Trainer
+        from ablations.training.trainer_depth import Trainer
     elif pipeline in ["edge", "edge_pose_scratch", "edge_pose_resume"]:
-        from train_scripts.trainer_edge import Trainer
+        from ablations.training.trainer_edge import Trainer
     else:
         from trainer import Trainer
     return Trainer

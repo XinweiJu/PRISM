@@ -16,7 +16,7 @@ from layers import transformation_from_parameters
 from utils import readlines
 import networks
 from scipy.spatial.transform import Rotation as R, Slerp
-from evaluate_scripts.depth_evaluate_max_norm import load_model
+from reference.depth.depth_evaluate_max_norm import load_model
 from path_config import data_path, generated_path, output_path, weights_path
 
 
@@ -88,7 +88,7 @@ def load_monodepth2_model(channels_per_image_depth, channels_per_image_pose, met
                         num_input_features=1,
                         num_frames_to_predict_for=2)
     elif method == "IID":
-        import networksIID
+        from ablations.networks import iid as networksIID
         print("   Loading IID pretrained encoder")
         encoder = networksIID.ResnetEncoder(18, True, num_input_images=2)
         print("   Loading IID pretrained decoder")
