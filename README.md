@@ -1,6 +1,6 @@
-# PRISM / DLPE
+# PRISM
 
-Code for **Multi-Modal Monocular Endoscopic Depth and Pose Estimation with Edge-Guided Self-Supervision**.
+Code for **[Multi-Modal Monocular Endoscopic Depth and Pose Estimation with Edge-Guided Self-Supervision](https://doi.org/10.1007/s11548-026-03669-1)**.
 
 The canonical DLPE configuration uses RGB + shading/luminance for the depth branch and RGB + edge for the pose branch. This repository contains the depth/pose training code and reference inference code. The IID shading generator and DexiNed/SegCol edge generator are external preprocessing dependencies; their network implementations and checkpoints are not bundled here.
 
