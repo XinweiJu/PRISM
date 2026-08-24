@@ -20,17 +20,12 @@ from tensorboardX import SummaryWriter
 import json
 
 from utils import *
-from kitti_utils import *
 from layers import *
 
 import datasets
 import networks
-from IPython import embed
-
 import glob
 from sklearn.model_selection import train_test_split
-import random 
-from torchvision.transforms import transforms
 
 class Trainer:
     def __init__(self, options):
@@ -223,10 +218,7 @@ class Trainer:
         print("training_mode:\n  ", self.opt.training_mode)
 
         # data
-        datasets_dict = {"kitti": datasets.KITTIRAWDataset,
-                         "kitti_odom": datasets.KITTIOdomDataset,
-                         "hk": datasets.HKDataset,
-                         }
+        datasets_dict = {"hk": datasets.HKDataset}
         self.dataset = datasets_dict[self.opt.dataset]
 
         if not isinstance(self.opt.split, list):
@@ -239,7 +231,9 @@ class Trainer:
         val_filenames =[]
         train_filenames = []
         for i, split in enumerate(self.opt.split):
-            data_path = self.opt.data_path[i]
+            data_path = (self.opt.data_path[i]
+                         if isinstance(self.opt.data_path, (list, tuple))
+                         else self.opt.data_path)
             if split == "hk" or split == "c3vd":
                 aug = self.opt.aug_type
                 if not os.path.exists(fpath[i].format(f'train{aug}')):
@@ -931,14 +925,14 @@ class Trainer:
                     else:
                         full_weight = rgb_weight
 
-                    # 重排：[R1,G1,B1,E1,...]
+                    # Reorder channels per image: [R1, G1, B1, E1, ...].
                     reordered = []
                     for i in range(num_input_images):
                         for c in range(channels_per_image):
                             reordered.append(full_weight[:, i * channels_per_image + c:i * channels_per_image + c + 1, :, :])
                     new_conv1 = torch.cat(reordered, dim=1)
 
-                    # 安全检查
+                    # Guard against silently loading an incompatible encoder.
                     assert new_conv1.shape == model_dict[k].shape, \
                         f"❌ Weight shape mismatch: got {new_conv1.shape}, expected {model_dict[k].shape}"
 
@@ -965,23 +959,3 @@ class Trainer:
             self.model_optimizer.load_state_dict(optimizer_dict)
         else:
             print("Cannot find Adam weights so Adam is randomly initialized")
-
-
-
-            # if k.endswith("conv1.weight") and v.shape[1] == 3:
-            #         # 自动适配 3通道预训练的conv1到 4/8通道
-            #         print(f"Adapting {k} from shape {v.shape} to {model_dict[k].shape}")
-            #         num_input_images = self.num_input_images  # e.g. 1 or 2
-            #         rgb_weight = torch.cat([v] * num_input_images, dim=1) / num_input_images
-            #         edge_weight = torch.mean(v, dim=1, keepdim=True).repeat(1, num_input_images, 1, 1)
-
-            #         reordered = []
-            #         for i in range(num_input_images):
-            #             reordered.extend([
-            #                 rgb_weight[:, i*3 + 0:i*3 + 1, :, :],  # R
-            #                 rgb_weight[:, i*3 + 1:i*3 + 2, :, :],  # G
-            #                 rgb_weight[:, i*3 + 2:i*3 + 3, :, :],  # B
-            #                 edge_weight[:, i:i+1, :, :]            # E
-            #             ])
-            #         new_conv1 = torch.cat(reordered, dim=1)
-            #         adapted_dict[k] = new_conv1

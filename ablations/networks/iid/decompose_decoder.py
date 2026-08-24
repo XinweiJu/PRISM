@@ -18,7 +18,7 @@ class decompose_decoder(nn.Module):
         self.num_ch_dec = np.array([32, 64, 64, 128, 256])
 
         # decoder
-        self.convs = OrderedDict() # 有序字典
+        self.convs = OrderedDict()
         #Reflectance
         for i in range(4, -1, -1):
             # upconv_0
@@ -71,6 +71,5 @@ class decompose_decoder(nn.Module):
         x_L=self.convs[("upconv_L",1)](x_L)
 
         self.outputs[("decompose_L")] = self.sigmoid(self.convs[("decompose_L_conv", 0)](x_L))
-        
+
         return self.outputs[("decompose_R")],self.outputs[("decompose_L")]
-        

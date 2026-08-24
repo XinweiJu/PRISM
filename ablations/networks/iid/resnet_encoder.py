@@ -7,7 +7,7 @@ import torch.nn as nn
 import torchvision.models as models
 import torch.utils.model_zoo as model_zoo
 from torchvision.models import resnet18, resnet50, ResNet18_Weights, ResNet50_Weights
-from torchvision import models  # 如果 ResNetMultiImageInput 自定义模型在这里定义
+from torchvision import models
 
 
 

@@ -20,17 +20,12 @@ from tensorboardX import SummaryWriter
 import json
 
 from utils import *
-from kitti_utils import *
 from layers import *
 
 import datasets
 import networks
-from IPython import embed
-
 import glob
 from sklearn.model_selection import train_test_split
-import random 
-from torchvision.transforms import transforms
 
 class Trainer:
     def __init__(self, options):
@@ -251,10 +246,7 @@ class Trainer:
         print("training_mode:\n  ", self.opt.training_mode)
 
         # data
-        datasets_dict = {"kitti": datasets.KITTIRAWDataset,
-                         "kitti_odom": datasets.KITTIOdomDataset,
-                         "hk": datasets.HKDataset,
-                         }
+        datasets_dict = {"hk": datasets.HKDataset}
         self.dataset = datasets_dict[self.opt.dataset]
 
         if not isinstance(self.opt.split, list):
@@ -268,7 +260,9 @@ class Trainer:
         val_filenames =[]
         train_filenames = []
         for i, split in enumerate(self.opt.split):
-            data_path = self.opt.data_path[i]
+            data_path = (self.opt.data_path[i]
+                         if isinstance(self.opt.data_path, (list, tuple))
+                         else self.opt.data_path)
             if split == "hk" or split == "c3vd":
                 aug = self.opt.aug_type
                 if not os.path.exists(fpath[i].format(f'train{aug}')):
@@ -392,19 +386,19 @@ class Trainer:
     def freeze_depth_networks(self):
         print("🔒 Freezing depth networks...")
         
-        # 冻结encoder
+        # Freeze the depth encoder.
         if "encoder" in self.models:
             for param in self.models["encoder"].parameters():
                 param.requires_grad = False
             print("  ✅ Encoder frozen")
         
-        # 冻结depth decoder
+        # Freeze the depth decoder.
         if "depth" in self.models:
             for param in self.models["depth"].parameters():
                 param.requires_grad = False
             print("  ✅ Depth decoder frozen")
         
-        # 如果有predictive_mask也冻结
+        # Freeze the optional predictive mask as part of the depth branch.
         if "predictive_mask" in self.models:
             for param in self.models["predictive_mask"].parameters():
                 param.requires_grad = False
@@ -486,7 +480,7 @@ class Trainer:
             late_phase = self.step % 2000 == 0
 
             if early_phase or late_phase:
-                self.log_time(batch_idx, duration, losses["loss_pose"].cpu().data)  # 🔥 修改：显示pose loss
+                self.log_time(batch_idx, duration, losses["loss_pose"].cpu().data)
 
                 if "depth_gt" in inputs:
                     self.compute_depth_losses(inputs, outputs, losses)
@@ -1119,31 +1113,3 @@ class Trainer:
 
             model_dict.update(adapted_dict)
             self.models[n].load_state_dict(model_dict)
-
-        # # loading adam state
-        # optimizer_load_path = os.path.join(self.opt.load_weights_folder, "adam.pth")
-        # if os.path.isfile(optimizer_load_path):
-        #     print("Loading Adam weights")
-        #     optimizer_dict = torch.load(optimizer_load_path)
-        #     self.model_optimizer.load_state_dict(optimizer_dict)
-        # else:
-        #     print("Cannot find Adam weights so Adam is randomly initialized")
-
-
-
-            # if k.endswith("conv1.weight") and v.shape[1] == 3:
-            #         print(f"Adapting {k} from shape {v.shape} to {model_dict[k].shape}")
-            #         num_input_images = self.num_input_images  # e.g. 1 or 2
-            #         rgb_weight = torch.cat([v] * num_input_images, dim=1) / num_input_images
-            #         edge_weight = torch.mean(v, dim=1, keepdim=True).repeat(1, num_input_images, 1, 1)
-
-            #         reordered = []
-            #         for i in range(num_input_images):
-            #             reordered.extend([
-            #                 rgb_weight[:, i*3 + 0:i*3 + 1, :, :],  # R
-            #                 rgb_weight[:, i*3 + 1:i*3 + 2, :, :],  # G
-            #                 rgb_weight[:, i*3 + 2:i*3 + 3, :, :],  # B
-            #                 edge_weight[:, i:i+1, :, :]            # E
-            #             ])
-            #         new_conv1 = torch.cat(reordered, dim=1)
-            #         adapted_dict[k] = new_conv1

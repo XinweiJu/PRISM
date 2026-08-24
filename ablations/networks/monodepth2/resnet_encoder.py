@@ -52,9 +52,9 @@ def resnet_multiimage_input(num_layers, pretrained=False, num_input_images=1):
     model = ResNetMultiImageInput(block_type, blocks, num_input_images=num_input_images)
 
     if pretrained:
-        # 修复torchvision兼容性问题
+        # Support both current and legacy torchvision weight APIs.
         try:
-            # 新版本torchvision的方式
+            # Current torchvision API.
             if num_layers == 18:
                 pretrained_model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
             elif num_layers == 50:
@@ -63,11 +63,11 @@ def resnet_multiimage_input(num_layers, pretrained=False, num_input_images=1):
                 raise ValueError(f"Unsupported num_layers: {num_layers}")
             loaded = pretrained_model.state_dict()
         except AttributeError:
-            # 旧版本torchvision的方式 (fallback)
+            # Legacy torchvision fallback.
             try:
                 loaded = model_zoo.load_url(models.resnet.model_urls['resnet{}'.format(num_layers)])
             except AttributeError:
-                # 如果model_urls也不存在，使用直接加载
+                # Final fallback when model_urls is unavailable.
                 if num_layers == 18:
                     pretrained_model = models.resnet18(pretrained=True)
                 elif num_layers == 50:

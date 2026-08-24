@@ -1,0 +1,72 @@
+{
+  "hyper_kvasir": {
+    "key": "hk",
+    "input_root": "data_folder/input_data/hk",
+    "generated_root": "data_folder/generated/hk",
+    "image_pattern": "<sequence>/<frame:05d>.jpg",
+    "split_family": ["hk", "hk_interval5", "hk_interval10", "hk_interval20", "hk_interval30"],
+    "base_split": {
+      "train_frames": 16976,
+      "validation_frames": 1887,
+      "train_sequences": [
+        "11e01bb3-b9b7-466d-9187-13a60daef108",
+        "17241dcf-de85-461d-9435-f5134035aacb",
+        "18618452-9b66-4df3-b9ac-f72f8e10f2a2",
+        "1c1ca45a-315e-4ad0-9343-2425d2faf648",
+        "1c25af4a-8c13-474d-a34a-c6f470d4c934",
+        "26d1b304-9aaa-4eb2-9eb5-2000cf259577",
+        "30bc2ab9-f04a-47ca-ad4c-4672dcca32f1",
+        "31573497-b434-4c27-86ba-a53a65d5f9ce",
+        "33143cb2-a5ef-4bab-b25e-148a8076e5dd",
+        "3624191f-8fb3-40ba-b421-fb5d0b2e10fb",
+        "46e2df1d-9fb9-4fc0-b09e-0b90899350d7",
+        "4dd27426-9dce-4d8f-8d98-5baf4f5d0b68",
+        "4fc1a16d-ccab-4b82-9c2c-df113a22cfa1",
+        "661d59a9-9873-445f-a3d9-d2789d279f82",
+        "6eb1b0c6-2b6f-408f-b1f2-577012da57c7",
+        "7fe9e5ab-4e01-44f0-9139-604649b237e9",
+        "a30ca29e-02e0-4662-9272-f68ceb10bfec",
+        "a75bc3f1-949c-4629-bc66-c31c139be6df",
+        "a9abfe79-568e-4192-9d1c-79709ef23b8a",
+        "c205ec73-4652-4f91-8711-ddb6a50e1d16",
+        "cba869d8-497e-474c-9f17-7c50ae8b738d",
+        "dc7d389f-4c20-47d2-bf1b-1da475ef4a14",
+        "df584e0e-f487-4de1-b658-e849320337e3",
+        "dfcb8d4c-a3c1-4410-961b-d7a70b68d9c3",
+        "f1dfa843-1e53-4a5d-b3b1-d29dc08e968a",
+        "f82fb1e7-ecbb-46d6-ba90-a4624a1b1577"
+      ],
+      "validation_sequences": [
+        "07bbedb7-1d45-4655-9ccd-aeb28a2c4bab",
+        "46e2df1d-9fb9-4fc0-b09e-0b90899350d7",
+        "8ca9db2d-4ccc-4b15-bf80-60198b86b047",
+        "f4e1327e-f634-4768-90eb-f42e38f525b5"
+      ],
+      "sequence_overlap": {
+        "train_validation": ["46e2df1d-9fb9-4fc0-b09e-0b90899350d7"]
+      }
+    }
+  },
+  "c3vd": {
+    "key": "c3vd",
+    "input_root": "data_folder/input_data/c3vd",
+    "generated_root": "data_folder/generated/c3vd",
+    "image_pattern": "<sequence>/<frame:04d>_color.png",
+    "depth_pattern": "<sequence>/<frame:04d>_depth.tiff",
+    "split_family": ["c3vd_mysplit", "c3vd_mysplit_interval5", "c3vd_mysplit_interval10", "c3vd_mysplit_interval20", "c3vd_mysplit_interval30"],
+    "base_split": {
+      "train_frames": 6819,
+      "validation_frames": 1454,
+      "test_frames": 1698,
+      "train_sequences": [
+        "cecum_t1_a", "cecum_t1_b", "cecum_t2_a", "cecum_t2_b",
+        "cecum_t2_c", "cecum_t3_a", "sigmoid_t1_a", "sigmoid_t2_a",
+        "trans_t1_a", "trans_t1_b", "trans_t2_a", "trans_t2_b",
+        "trans_t2_c", "trans_t3_a", "trans_t3_b"
+      ],
+      "validation_sequences": ["cecum_t4_a", "sigmoid_t3_a", "trans_t4_a"],
+      "test_sequences": ["cecum_t4_b", "desc_t4_a", "sigmoid_t3_b", "trans_t4_b"],
+      "sequence_overlap": false
+    }
+  }
+}

@@ -8,15 +8,10 @@ from __future__ import absolute_import, division, print_function
 
 import os
 import argparse
-from pyexpat import model
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 from layers import transformation_from_parameters
-from utils import readlines
-import networks
 from scipy.spatial.transform import Rotation as R, Slerp
-from reference.depth.depth_evaluate_max_norm import load_model
 from path_config import data_path, generated_path, output_path, weights_path
 
 
@@ -171,7 +166,7 @@ def run_pose_prediction_on_video(args, video_name):
 
     import glob
 
-    # 获取该视频中所有 frame 文件数量
+    # Count all frames in the sequence.
     image_dir = os.path.join(args.data_path, video_name)
     image_paths = sorted(glob.glob(os.path.join(image_dir, "*_color.png")))
     max_index = len(image_paths)

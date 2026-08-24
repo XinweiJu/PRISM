@@ -1,0 +1,21 @@
+{
+  "model_name": "c3vd_mono_finetuned_dlpe_edge_ssim",
+  "dataset": "hk",
+  "data": "c3vd",
+  "data_path": "data_folder/input_data/c3vd",
+  "split": "c3vd_mysplit",
+  "height": 288,
+  "width": 288,
+  "frame_ids": [0, -1, 1],
+  "scales": [0, 1, 2, 3],
+  "method": "monodepth2",
+  "training_mode": "both",
+  "edge_loss": true,
+  "png": true,
+  "batch_size": 12,
+  "learning_rate": 0.0001,
+  "num_epochs": 30,
+  "scheduler_step_size": 15,
+  "save_frequency": 10,
+  "num_workers": 12
+}

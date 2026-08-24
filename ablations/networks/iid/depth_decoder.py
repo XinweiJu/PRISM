@@ -27,7 +27,7 @@ class DepthDecoder(nn.Module):
         self.num_ch_dec = np.array([16, 32, 64, 128, 256])
 
         # decoder
-        self.convs = OrderedDict() # 有序字典
+        self.convs = OrderedDict()
         for i in range(4, -1, -1):
             # upconv_0
             num_ch_in = self.num_ch_enc[-1] if i == 4 else self.num_ch_dec[i + 1]

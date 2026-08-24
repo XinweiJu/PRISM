@@ -1,0 +1,36 @@
+{
+  "release": "PRISM-DLPE-weights-v1.0.0",
+  "dlpe": {
+    "source_checkpoint": "hk_mono_finetuned_dlpe_edge_ssim_depth_fix/models/weights_29",
+    "training_data": "Hyper-Kvasir; repository split hk",
+    "image_size": [288, 288],
+    "depth_input": "RGB [0,1] + IID luminance [0,255]",
+    "pose_input": "paired RGB [0,1] + DexiNed edge [0,1]",
+    "stage": "edge-guided pose refinement with depth encoder/decoder frozen",
+    "files": {
+      "dlpe/encoder.pth": "f02e5e8092e8758bb3199bdf07d59c4bab375961213cee3576ecbf1af84a47c9",
+      "dlpe/depth.pth": "4297a3617dd2d890955019ba727302e59c145041f85ade8e6f3fb788a813a357",
+      "dlpe/pose_encoder.pth": "aafb227d5dc2137a211171817f0a9207884fa073851a8b01c80d504510049b5f",
+      "dlpe/pose.pth": "4e1cecf5ddc0b0a86df935a2dfea218a1b06ffb2e64e6fcf3e899cf64c4116fa"
+    }
+  },
+  "lum_generator": {
+    "source_checkpoint": "finetuned_mono_hkfull_288_pseudo_dsms_automasking_noadjust/models/weights_19",
+    "training_data": "Hyper-Kvasir",
+    "image_size": [288, 288],
+    "output": "sigmoid illumination multiplied by 255",
+    "files": {
+      "lum_generator/decompose_encoder.pth": "ac18288a342966d4492cedec994f53035fea25509beb056f53b3927b816aa9b2",
+      "lum_generator/decompose.pth": "f1a4980a8f7cd3ae68d36280d2dfbc04b651663b5ce848585ed722493e1b056e"
+    }
+  },
+  "edge_generator": {
+    "architecture": "DexiNed",
+    "training_data": "SegCol colon-fold annotations",
+    "image_size": [512, 512],
+    "output": "seven independently min-max-normalized sigmoid side outputs, averaged and divided by 255",
+    "files": {
+      "edge_generator/16_model.pth": "abaff203db8c7020977279bf1473a70cb03a5f62430138a028c4467db91a07e6"
+    }
+  }
+}

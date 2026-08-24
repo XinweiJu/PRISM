@@ -54,16 +54,20 @@ class HKDataset(HKInitDataset):
         super(HKDataset, self).__init__(*args, **kwargs)
 
     def get_image_path(self, folder, frame_index, side):
-        if "C3VD" in folder:
+        if self.data == "c3vd":
             f_str = "{:04d}_color{}".format(frame_index, self.img_ext)
-        elif "BBPS-2-3Frames" in folder:
+        elif self.data == "hk":
             f_str = "{:05d}{}".format(frame_index, self.img_ext)
+        else:
+            raise ValueError("Unsupported endoscopy dataset: {}".format(self.data))
         image_path = os.path.join(folder, f_str)
         return image_path
     
     def get_depth(self, folder, frame_index, side, do_flip):
-        if "C3VD" in folder:
+        if self.data == "c3vd":
             f_str = "{:04d}_depth{}".format(frame_index, '.tiff')
+        else:
+            raise ValueError("Ground-truth depth is only available for C3VD")
 
         depth_16bit = pil.open(os.path.join(folder, f_str))
         depth_gt = np.array(depth_16bit, dtype=np.float32) # this is 16bit depth

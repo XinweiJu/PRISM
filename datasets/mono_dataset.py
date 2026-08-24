@@ -9,7 +9,6 @@ from __future__ import absolute_import, division, print_function
 import os
 import random
 import numpy as np
-import copy
 from PIL import Image  # using pillow-simd for increased speed
 
 import torch
@@ -91,10 +90,10 @@ class MonoDataset(data.Dataset):
             s = 2 ** i
             size = (self.height // s, self.width // s)
 
-            # color_aug 用 LANCZOS（PIL only）
+            # RGB and augmented RGB use Lanczos interpolation.
             self.resize_color[i] = transforms.Resize(size, interpolation=Image.LANCZOS)
 
-            # edge 用 BILINEAR（Tensor friendly）
+            # Auxiliary tensors use bilinear interpolation.
             self.resize_edge[i] = transforms.Resize(size, interpolation=InterpolationMode.BILINEAR)
 
 
@@ -153,12 +152,12 @@ class MonoDataset(data.Dataset):
 
         line = self.filenames[index].split()
         if len(line) == 1:
-            #/Datasets/C3VD_Undistorted/Dataset/cecum_t1_a/0021_color.png            
-            # Extract the filename from the path
             full_image_path = line[0]
-            folder_full = os.path.dirname(full_image_path)                      # /Datasets/C3VD_Undistorted/Dataset/cecum_t1_a
-            folder_name = os.path.basename(folder_full)                         # cecum_t1_a
-            filename = os.path.basename(full_image_path).split(".")[0]         # 0021_color
+            if not os.path.isabs(full_image_path):
+                full_image_path = os.path.join(self.data_path, full_image_path)
+            folder_full = os.path.dirname(full_image_path)
+            folder_name = os.path.basename(folder_full)
+            filename = os.path.basename(full_image_path).split(".")[0]
             # Use regular expression to find the first sequence of digits
             match = re.search(r'\d+', filename)
 

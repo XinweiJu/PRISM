@@ -2,27 +2,39 @@
 
 Code for **[Multi-Modal Monocular Endoscopic Depth and Pose Estimation with Edge-Guided Self-Supervision](https://doi.org/10.1007/s11548-026-03669-1)**.
 
-The canonical DLPE configuration uses RGB + shading/luminance for the depth branch and RGB + edge for the pose branch. This repository contains the depth/pose training code and reference inference code. The IID shading generator and DexiNed/SegCol edge generator are external preprocessing dependencies; their network implementations and checkpoints are not bundled here.
+The canonical DLPE configuration uses RGB + shading/luminance for the depth
+branch and RGB + edge for the pose branch. This repository contains the
+depth/pose training code, reproducible preprocessing entrypoint, example
+configurations, data contract, and reference inference code.
 
-![PRISM structure](_Structure.png)
+![PRISM structure](docs/assets/prism-architecture.png)
 
-## What is kept
+## 🗂️ Repository structure
 
 ```text
 PRISM/
 ├── train_prism.py          # supported training entrypoint
+├── predict_prism.py        # supported inference/evaluation dispatcher
 ├── trainer.py              # stage-2 joint depth/pose trainer
 ├── options.py              # shared command-line/config options
 ├── path_config.py          # portable data/weight/output roots
-├── datasets/               # endoscopy and KITTI-compatible loaders
+├── layers.py               # geometry, warping, SSIM, and depth metrics
+├── utils.py                # shared file, checkpoint, and logging helpers
+├── configs/                # training configs + machine-readable dataset manifest
+├── preprocessing/          # IID luminance + DexiNed edge generation
+├── docs/                   # specifications and README image assets
+├── release/                # public checkpoint manifest and provenance
+├── datasets/               # HK/C3VD image and modality loaders
 ├── networks/               # canonical ResNet/Monodepth2-style PRISM model
 ├── splits/                 # reproducible train/validation/test lists
+│   ├── hk[_intervalN]/
+│   └── c3vd_mysplit[_intervalN]/
 ├── reference/              # inference and evaluation code
 │   ├── depth/
 │   └── pose_predict_feast_v1.py
 └── ablations/              # optional baselines and specialist trainers
     ├── networks/
-    │   ├── iid/
+    │   ├── iid/             # source architecture used by lum_generator weights
     │   ├── monodepth2/
     │   └── monovit/
     └── training/
@@ -30,13 +42,19 @@ PRISM/
         └── trainer_edge.py
 ```
 
-The old duplicate `train*.py` wrappers are not part of the maintained API. Use `train_prism.py` for all runs. During this cleanup they were moved, without deletion, to `/home/xju/Workspace/PRISM-archive-20260811/legacy_training_entrypoints/`.
+Use `train_prism.py` for all maintained training runs. Old duplicate wrappers
+are not part of the public API.
 
-## Environment
+## 🛠️ Installation
 
-Create a Python environment with a CUDA-compatible PyTorch build, then install:
+Clone the repository, create a Python environment with a CUDA-compatible
+PyTorch build, and install the dependencies:
 
 ```bash
+git clone https://github.com/XinweiJu/PRISM.git
+cd PRISM
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -46,7 +64,8 @@ The default PRISM path needs PyTorch, torchvision, NumPy, Pillow, OpenCV, SciPy,
 pip install -r ablations/requirements.txt
 ```
 
-Datasets, generated modalities and checkpoints are deliberately not committed. Configure their roots with:
+Datasets, generated modalities and checkpoints are deliberately not committed.
+Configure their roots with:
 
 ```bash
 export PRISM_DATA_ROOT=/path/to/data_folder
@@ -56,15 +75,107 @@ export PRISM_OUTPUT_ROOT=/path/to/output_data
 
 The more specific variables `PRISM_DATA_PATH`, `PRISM_GENERATED_PATH`, `PRISM_WEIGHTS_PATH`, and `PRISM_OUTPUT_PATH` override individual locations.
 
-## Training code
+## 🚀 Quick start
+
+1. Arrange the RGB data using the filename contract in
+   [`docs/DATA_PREPARATION.md`](docs/DATA_PREPARATION.md).
+2. Download `PRISM-DLPE-weights-v1.0.0.tar.gz` and its `.sha256` file from the
+   [v1.0.0 Release](https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0), then unpack it:
+
+```bash
+sha256sum -c PRISM-DLPE-weights-v1.0.0.tar.gz.sha256
+mkdir -p weights
+tar -xzf PRISM-DLPE-weights-v1.0.0.tar.gz -C weights
+```
+
+   The archive contains `dlpe`, `lum_generator`, and `edge_generator`; no
+   checkpoint renaming is required.
+3. Generate edge and luminance inputs by following
+   [Prepare modalities](#1-prepare-modalities).
+
+4. Train the DLPE configuration:
+
+```bash
+python train_prism.py --pipeline joint \
+  --config configs/prism_dlpe_hk.json
+```
+
+Paths and machine-specific settings can be overridden after `--config`; for
+example, `--data_path /data/hk --batch_size 32 --num_workers 8`. Command-line
+arguments take precedence over JSON values.
+
+## 📐 Data preprocessing contract
+
+The complete specification is in
+[`docs/DATA_PREPARATION.md`](docs/DATA_PREPARATION.md). The important numeric
+conventions are:
+
+| Input | Stored form | Tensor seen by the PRISM loader |
+| --- | --- | --- |
+| RGB | RGB JPEG/PNG | `float32 [0,1]`; encoder applies `(x-0.45)/0.225` |
+| Edge | `float32 .npy` | one channel in `[0,1]` |
+| Luminance | grayscale PNG | one channel in `[0,255]`, intentionally not divided by 255 |
+
+The preprocessing command reproduces the generator path used in the original
+PRISM experiments: IID/SHADES sigmoid illumination is multiplied by 255;
+DexiNed's seven sigmoid side outputs are independently min-max normalized,
+resized, averaged, and divided by 255. It also writes a manifest containing
+the checkpoint SHA256 hashes.
+
+## 🏋️ Training
 
 PRISM uses the following three-stage workflow:
 
-1. Pre-generate shading/luminance and edge maps with the external IID and edge models.
+1. Pre-generate shading/luminance and edge maps with
+   `preprocessing/generate_modalities.py`.
 2. Jointly train depth and pose with `trainer.py`.
 3. Load the joint checkpoint, freeze the depth encoder/decoder, and fine-tune pose with the specialist trainer in `ablations/training/`.
 
 ### 1. Prepare modalities
+
+The generator needs the released `lum_generator` and `edge_generator` weights.
+The luminance architecture is included in this repository. DexiNed's model
+definition is loaded from a local clone of the
+[DexiNed repository](https://github.com/xavysp/DexiNed); its released PRISM
+checkpoint was trained on SegCol rather than the original DexiNed dataset.
+
+Clone DexiNed next to PRISM (or use any existing checkout):
+
+```bash
+git clone https://github.com/xavysp/DexiNed.git external/DexiNed
+```
+
+Generate both modalities for every Hyper-Kvasir RGB frame:
+
+```bash
+python preprocessing/generate_modalities.py \
+  --dataset hk \
+  --input-root data_folder/input_data/hk \
+  --output-root data_folder/generated \
+  --iid-checkpoint-dir weights/PRISM-DLPE-weights-v1.0.0/lum_generator \
+  --dexined-repo external/DexiNed \
+  --dexined-checkpoint weights/PRISM-DLPE-weights-v1.0.0/edge_generator/16_model.pth \
+  --device cuda
+```
+
+For C3VD, use the same command with the dataset and RGB root changed:
+
+```bash
+python preprocessing/generate_modalities.py \
+  --dataset c3vd \
+  --input-root data_folder/input_data/c3vd \
+  --output-root data_folder/generated \
+  --iid-checkpoint-dir weights/PRISM-DLPE-weights-v1.0.0/lum_generator \
+  --dexined-repo external/DexiNed \
+  --dexined-checkpoint weights/PRISM-DLPE-weights-v1.0.0/edge_generator/16_model.pth \
+  --device cuda
+```
+
+Before processing a complete dataset, test one image with `--limit 1`. Use
+`--device cpu` on a machine without CUDA and `--overwrite` only when existing
+outputs should be regenerated. Successful execution writes both modalities and
+`generated/<dataset>/generation_manifest.json`, which records the input/output
+roots, processed image counts, network sizes, and checkpoint SHA256 hashes.
 
 For an RGB image such as `sequence/00001.jpg`, the loaders expect generated modalities under the configured generated-data root. Representative layouts are:
 
@@ -78,7 +189,16 @@ generated/
     └── shading/sequence/decomposed/light0000_color.png
 ```
 
-Check the selected split and `datasets/HK_dataset.py` before launching a new dataset because naming conventions differ between HK, C3VD and EndoMapper exports.
+Exact path derivation, ranges, interpolation, temporal-neighbor requirements,
+and naming rules are documented in
+[`docs/DATA_PREPARATION.md`](docs/DATA_PREPARATION.md). Check the selected split
+before launching a new dataset because naming conventions differ between HK
+and C3VD exports.
+
+Dataset roots, complete sequence lists, split overlap notes, and frame counts
+are documented in [`docs/DATASETS.md`](docs/DATASETS.md) and mirrored in
+[`configs/datasets.json`](configs/datasets.json). Split entries use portable
+`<sequence>/<filename>` paths resolved relative to `--data_path`.
 
 ### 2. Joint depth/pose training
 
@@ -119,7 +239,52 @@ python train_prism.py --pipeline edge_pose_resume \
 
 Options may also be stored in JSON and passed with `--config path/to/config.json`. Command-line values override the corresponding defaults according to `options.py`.
 
-## Reference code
+The repository includes `configs/prism_dlpe_hk.json` and
+`configs/prism_dlpe_c3vd.json`. These record the paper-style `288x288`,
+three-frame, four-scale, 30-epoch setup; edit paths and batch size for the local
+machine rather than encoding machine-specific absolute paths in a committed
+config.
+
+## 📦 Weights and GitHub Releases
+
+Do not commit `.pth` files to Git. Publish model and preprocessing checkpoints
+as versioned assets under [GitHub Releases](https://github.com/XinweiJu/PRISM/releases)
+with this layout:
+
+```text
+PRISM-DLPE-weights-vX.Y.Z/
+├── checkpoints.json
+├── dlpe/
+│   ├── encoder.pth
+│   ├── depth.pth
+│   ├── pose_encoder.pth
+│   └── pose.pth
+├── lum_generator/
+│   ├── decompose_encoder.pth
+│   └── decompose.pth
+└── edge_generator/
+    └── 16_model.pth
+```
+
+The Release contains only the original four-channel DLPE model and its two
+frozen preprocessing models—no optimizer state or unrelated experiment
+weights. Provenance is:
+
+- **DLPE:** RGB+luminance DepthNet and RGB+edge PoseNet trained on the committed
+  Hyper-Kvasir split; the released final checkpoint follows edge-guided pose
+  refinement with DepthNet frozen.
+- **Lum generator (IID/LumNet):** `finetuned_mono_hkfull_288_pseudo_dsms_automasking_noadjust`,
+  trained on Hyper-Kvasir at `288x288`; only the decomposition encoder and
+  decoder required to generate luminance are included.
+- **Edge generator (DexiNed/EdgeNet):** DexiNed trained on the SegCol colon-fold annotations;
+  only `16_model.pth`, used to generate the averaged edge maps, is included.
+
+Each Release includes an archive-level `.sha256` file. `checkpoints.json`
+records every file hash, epoch, input routing, image size, dataset/split, and
+preprocessing provenance. The expected local layout is also listed in the data
+preparation guide.
+
+## 🔍 Inference and evaluation
 
 `predict_prism.py` is the supported dispatcher. The implementation modules live under `reference/` so they are separated from training code.
 
@@ -128,8 +293,8 @@ Depth inference/evaluation for C3VD-style folders:
 ```bash
 python predict_prism.py depth-c3vd \
   --image_path /path/to/c3vd \
-  --model_basepath /path/to/weights \
-  --model_name experiment/models/weights_19 \
+  --model_basepath weights/PRISM-DLPE-weights-v1.0.0 \
+  --model_name dlpe \
   --output_path /path/to/output \
   --edge_root /path/to/generated/edge \
   --shading_root /path/to/generated/shading \
@@ -155,14 +320,39 @@ Run `python predict_prism.py COMMAND --help` to see the arguments implemented by
 - `ablations/networks/monovit`: optional MonoViT backbone.
 - `ablations/training`: frozen-depth pose fine-tuning implementations used by stage 3 and older edge-loss experiments.
 
-Track-point, five-channel, optical-flow, C3VD fine-tuning and CLiMB submission experiments are not mixed into this original repository. They remain in the separate `PRISM-CLiMB` workspace, which prevents challenge-specific code from silently changing the reference DLPE implementation.
-
 ## Reproducibility notes
 
 - Image height and width must be multiples of 32.
 - A checkpoint's behavior depends on both its tensors and the model-name modality token.
-- Preserve the exact preprocessing checkpoint and generated edge/shading files used for an experiment.
-- Split files may contain absolute paths from the original machine; inspect them before reuse.
+- Preserve the exact preprocessing checkpoint and generated edge/shading files used for an experiment; the generator manifest records their hashes.
+- Split files contain portable paths relative to `--data_path`.
 - Outputs, weights, datasets, caches and logs are ignored by Git.
 
-![Qualitative results](Main_qualitative_031026_w_shading.png)
+![Qualitative results](docs/assets/qualitative-results.png)
+
+## Citation and related resources
+
+If you use this code or the released weights, please cite PRISM:
+
+```bibtex
+@article{ju2026prism,
+  title   = {Multi-modal monocular endoscopic depth and pose estimation with edge-guided self-supervision},
+  author  = {Ju, Xinwei and Daher, Rema and Stoyanov, Danail and Bano, Sophia and Vasconcelos, Francisco},
+  journal = {International Journal of Computer Assisted Radiology and Surgery},
+  year    = {2026},
+  doi     = {10.1007/s11548-026-03669-1}
+}
+```
+
+Please also cite the resources used by the corresponding experiment or
+preprocessing stage:
+
+- [PRISM paper](https://doi.org/10.1007/s11548-026-03669-1)
+- [Hyper-Kvasir dataset](https://doi.org/10.1038/s41597-020-00622-y)
+- [C3VD dataset](https://doi.org/10.1016/j.media.2023.102956)
+- [EndoMapper dataset](https://doi.org/10.1038/s41597-023-02564-7)
+- [SegCol fold-edge dataset](https://arxiv.org/abs/2412.16078)
+- [DexiNed](https://doi.org/10.1109/WACV45572.2020.9093290)
+- [IID-SfMLearner](https://doi.org/10.1109/JBHI.2024.3400804)
+- [SHADeS](https://arxiv.org/abs/2502.12994)
+- [Monodepth2](https://openaccess.thecvf.com/content_ICCV_2019/html/Godard_Digging_Into_Self-Supervised_Monocular_Depth_Estimation_ICCV_2019_paper.html)

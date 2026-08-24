@@ -16,16 +16,11 @@ import glob
 import argparse
 import numpy as np
 import PIL.Image as pil
-import matplotlib as mpl
-import matplotlib.cm as cm
-
 import torch
-from torchvision import transforms, datasets
+from torchvision import transforms
 
 from layers import disp_to_depth
-from utils import download_model_if_doesnt_exist
 import skimage.transform
-from reference.depth.evaluate_depth import STEREO_SCALE_FACTOR
 import datetime
 import csv
 import json
@@ -472,7 +467,7 @@ if __name__ == '__main__':
     #     args.image_path = os.path.dirname(os.path.dirname(images[0]))
 
     elif os.path.isfile(args.image_path):
-        sequences = ["single"]  # ✅ 修复：为单图像路径创建一个 dummy sequence
+        sequences = ["single"]  # Use a synthetic sequence name for one image.
     else:
         raise Exception(f"Invalid image_path: {args.image_path}")
 

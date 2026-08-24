@@ -36,25 +36,16 @@ class MonodepthOptions:
                                  help="which training split to use",
                                  default="c3vd_mysplit",
                                  choices=[
-                                     "benchmark",
-                                     "c3vd",
                                      "c3vd_mysplit",
                                      "c3vd_mysplit_interval5",
                                      "c3vd_mysplit_interval10",
                                      "c3vd_mysplit_interval20",
                                      "c3vd_mysplit_interval30",
-                                     "c3vd_orig",
-                                     "eigen",
-                                     "eigen_benchmark",
-                                     "eigen_full",
-                                     "eigen_zhou",
                                      "hk",
                                      "hk_interval5",
                                      "hk_interval10",
                                      "hk_interval20",
                                      "hk_interval30",
-                                     "hk_orig",
-                                     "odom",
                                  ])
         self.parser.add_argument("--num_layers",
                                  type=int,
@@ -65,7 +56,7 @@ class MonodepthOptions:
                                  type=str,
                                  help="dataset loader to train on",
                                  default="hk",
-                                 choices=["kitti", "kitti_odom", "kitti_depth", "kitti_test", "hk"])
+                                 choices=["hk"])
         self.parser.add_argument("--png",
                                  help="train from png files instead of jpg files",
                                  action="store_true")
@@ -257,12 +248,16 @@ class MonodepthOptions:
                                  choices=["c3vd", "hk"])
 
     def parse(self):
-        self.options = self.parser.parse_args()
-
-        if self.options.config is not None:
-            with open(self.options.config, "r") as f:
+        config_parser = argparse.ArgumentParser(add_help=False)
+        config_parser.add_argument("--config", type=str)
+        config_args, _ = config_parser.parse_known_args()
+        if config_args.config is not None:
+            with open(config_args.config, "r") as f:
                 config = json.load(f)
-            for key, value in config.items():
-                setattr(self.options, key, value)
-
+            known = {action.dest for action in self.parser._actions}
+            unknown = sorted(set(config) - known)
+            if unknown:
+                self.parser.error("unknown config keys: {}".format(", ".join(unknown)))
+            self.parser.set_defaults(**config)
+        self.options = self.parser.parse_args()
         return self.options
