@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="PRISM: multi-modal monocular endoscopic depth and pose estimation with edge-guided self-supervision.">
+  <title>PRISM — Endoscopic Depth and Pose Estimation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <nav>
+      <a class="brand" href="#top">PRISM</a>
+      <div>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="https://github.com/XinweiJu/PRISM">Code</a>
+      </div>
+    </nav>
+    <main id="top">
+      <p class="eyebrow">Multi-modal self-supervised learning</p>
+      <h1>PRISM</h1>
+      <p class="subtitle">Multi-Modal Monocular Endoscopic Depth and Pose Estimation with Edge-Guided Self-Supervision</p>
+      <p class="authors">Xinwei Ju · Rema Daher · Danail Stoyanov · Sophia Bano · Francisco Vasconcelos</p>
+      <div class="actions">
+        <a class="primary" href="https://doi.org/10.1007/s11548-026-03669-1">Read the paper</a>
+        <a href="https://github.com/XinweiJu/PRISM">View code</a>
+        <a href="https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0">Download weights</a>
+      </div>
+    </main>
+  </header>
+
+  <section id="method" class="section">
+    <div class="section-heading">
+      <p class="eyebrow">Approach</p>
+      <h2>Geometry guided by complementary visual cues</h2>
+      <p>PRISM routes RGB and luminance to DepthNet, while RGB and edge maps guide PoseNet. The released preprocessing pipeline reproduces both auxiliary modalities.</p>
+    </div>
+    <img class="architecture" src="assets/images/prism-architecture.png" alt="PRISM depth and pose estimation architecture">
+    <div class="cards">
+      <article><span>01</span><h3>Luminance-aware depth</h3><p>IID-derived illumination complements RGB appearance for monocular depth estimation.</p></article>
+      <article><span>02</span><h3>Edge-guided pose</h3><p>Structural edge cues improve motion learning in challenging endoscopic imagery.</p></article>
+      <article><span>03</span><h3>Reproducible pipeline</h3><p>Public split manifests, preprocessing commands, configuration files, and checkpoint hashes.</p></article>
+    </div>
+  </section>
+
+  <section id="results" class="section dark">
+    <div class="section-heading">
+      <p class="eyebrow">Qualitative comparison</p>
+      <h2>Cross-domain depth on EndoMapper</h2>
+      <p>Input video and predicted depth from PRISM and representative self-supervised baselines.</p>
+    </div>
+    <video controls muted loop playsinline preload="metadata" poster="assets/images/comparison_2x4_ppt-poster.jpg">
+      <source src="assets/videos/comparison_2x4_ppt.mp4" type="video/mp4">
+      Your browser does not support embedded MP4 video.
+    </video>
+  </section>
+
+  <section class="section citation">
+    <div>
+      <p class="eyebrow">Citation</p>
+      <h2>Use PRISM in your research</h2>
+    </div>
+    <pre><code>@article{ju2026prism,
+  title   = {Multi-modal monocular endoscopic depth and pose estimation
+             with edge-guided self-supervision},
+  author  = {Ju, Xinwei and Daher, Rema and Stoyanov, Danail
+             and Bano, Sophia and Vasconcelos, Francisco},
+  journal = {International Journal of Computer Assisted Radiology and Surgery},
+  year    = {2026},
+  doi     = {10.1007/s11548-026-03669-1}
+}</code></pre>
+  </section>
+
+  <footer>
+    <strong>PRISM</strong>
+    <span>Endoscopic depth and pose estimation</span>
+    <a href="https://github.com/XinweiJu/PRISM">GitHub</a>
+  </footer>
+</body>
+</html>

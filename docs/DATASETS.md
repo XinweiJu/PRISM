@@ -23,15 +23,9 @@ is not used as a held-out quantitative test dataset in PRISM, so unused HK test
 files are intentionally not included. Quantitative evaluation uses C3VD, while
 EndoMapper is used qualitatively.
 
-| Split | Train | Validation | Meaning |
-| --- | ---: | ---: | --- |
-| `hk` | 16,976 | 1,887 | original sampling |
-| `hk_interval5` | 16,768 | 1,855 | discard the first 5 frames per sequence |
-| `hk_interval10` | 16,508 | 1,815 | discard the first 10 frames per sequence |
-| `hk_interval20` | 15,988 | 1,735 | discard the first 20 frames per sequence |
-| `hk_interval30` | 15,468 | 1,655 | discard the first 30 frames per sequence |
-
-The interval variants retain the same training/validation sequence assignment.
+The released `hk` split contains 16,976 training frames and 1,887 validation
+frames. Historical interval-sampling variants belong to the ablation study and
+are archived separately under `ablations/splits/`; they are not PRISM defaults.
 
 ## C3VD
 
@@ -46,13 +40,9 @@ sequences used by this repository.
 - Test (1,698 frames): `cecum_t4_b`, `desc_t4_a`, `sigmoid_t3_b`,
   `trans_t4_b`.
 
-| Split | Train | Validation | Test |
-| --- | ---: | ---: | ---: |
-| `c3vd_mysplit` | 6,819 | 1,454 | 1,698 |
-| `c3vd_mysplit_interval5` | 6,699 | 1,430 | 1,666 |
-| `c3vd_mysplit_interval10` | 6,549 | 1,400 | 1,626 |
-| `c3vd_mysplit_interval20` | 6,249 | 1,340 | 1,546 |
-| `c3vd_mysplit_interval30` | 5,949 | 1,280 | 1,466 |
+The released `c3vd_mysplit` contains 6,819 training frames, 1,454 validation
+frames, and 1,698 test frames. Historical interval-sampling variants are kept
+only under `ablations/splits/`.
 
 ## EndoMapper
 

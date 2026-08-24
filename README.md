@@ -1,5 +1,16 @@
 # PRISM
 
+[![Release](https://img.shields.io/github/v/release/XinweiJu/PRISM?label=weights&color=0f766e)](https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0)
+[![Project page](https://img.shields.io/badge/project-page-2563eb)](https://xinweiju.github.io/PRISM/)
+![Python](https://img.shields.io/badge/Python-3.8.10-3776ab?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-1.10.0%2Bcu102-ee4c2c?logo=pytorch&logoColor=white)
+![CUDA](https://img.shields.io/badge/CUDA-10.2-76b900?logo=nvidia&logoColor=white)
+![Linux](https://img.shields.io/badge/tested-Ubuntu%2020.04-e95420?logo=ubuntu&logoColor=white)
+
+**[Paper](https://doi.org/10.1007/s11548-026-03669-1) ·
+[Project page](https://xinweiju.github.io/PRISM/) ·
+[Download weights](https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0)**
+
 Code for **[Multi-Modal Monocular Endoscopic Depth and Pose Estimation with Edge-Guided Self-Supervision](https://doi.org/10.1007/s11548-026-03669-1)**.
 
 The canonical DLPE configuration uses RGB + shading/luminance for the depth
@@ -7,45 +18,14 @@ branch and RGB + edge for the pose branch. This repository contains the
 depth/pose training code, reproducible preprocessing entrypoint, example
 configurations, data contract, and reference inference code.
 
-![PRISM structure](docs/assets/prism-architecture.png)
-
-## 🗂️ Repository structure
-
-```text
-PRISM/
-├── train_prism.py          # supported training entrypoint
-├── predict_prism.py        # supported inference/evaluation dispatcher
-├── trainer.py              # stage-2 joint depth/pose trainer
-├── options.py              # shared command-line/config options
-├── path_config.py          # portable data/weight/output roots
-├── layers.py               # geometry, warping, SSIM, and depth metrics
-├── utils.py                # shared file, checkpoint, and logging helpers
-├── configs/                # training configs + machine-readable dataset manifest
-├── preprocessing/          # IID luminance + DexiNed edge generation
-├── docs/                   # specifications and README image assets
-├── release/                # public checkpoint manifest and provenance
-├── datasets/               # HK/C3VD image and modality loaders
-├── networks/               # canonical ResNet/Monodepth2-style PRISM model
-├── splits/                 # reproducible train/validation/test lists
-│   ├── hk[_intervalN]/
-│   └── c3vd_mysplit[_intervalN]/
-├── reference/              # inference and evaluation code
-│   ├── depth/
-│   └── pose_predict_feast_v1.py
-└── ablations/              # optional baselines and specialist trainers
-    ├── networks/
-    │   ├── iid/             # source architecture used by lum_generator weights
-    │   ├── monodepth2/
-    │   └── monovit/
-    └── training/
-        ├── trainer_depth.py
-        └── trainer_edge.py
-```
-
-Use `train_prism.py` for all maintained training runs. Old duplicate wrappers
-are not part of the public API.
+![PRISM structure](docs/assets/images/prism-architecture.png)
 
 ## 🛠️ Installation
+
+The original PRISM environment used Ubuntu 20.04, Python 3.8.10, PyTorch
+1.10.0, and CUDA 10.2. Install the torchvision build compatible with the
+selected PyTorch build. These versions document the tested environment; newer
+compatible PyTorch/CUDA installations may also work.
 
 Clone the repository, create a Python environment with a CUDA-compatible
 PyTorch build, and install the dependencies:
@@ -83,6 +63,8 @@ The more specific variables `PRISM_DATA_PATH`, `PRISM_GENERATED_PATH`, `PRISM_WE
    [v1.0.0 Release](https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0), then unpack it:
 
 ```bash
+wget https://github.com/XinweiJu/PRISM/releases/download/v1.0.0/PRISM-DLPE-weights-v1.0.0.tar.gz
+wget https://github.com/XinweiJu/PRISM/releases/download/v1.0.0/PRISM-DLPE-weights-v1.0.0.tar.gz.sha256
 sha256sum -c PRISM-DLPE-weights-v1.0.0.tar.gz.sha256
 mkdir -p weights
 tar -xzf PRISM-DLPE-weights-v1.0.0.tar.gz -C weights
@@ -247,9 +229,18 @@ config.
 
 ## 📦 Weights and GitHub Releases
 
-Do not commit `.pth` files to Git. Publish model and preprocessing checkpoints
-as versioned assets under [GitHub Releases](https://github.com/XinweiJu/PRISM/releases)
-with this layout:
+Download the published
+[`PRISM-DLPE-weights-v1.0.0.tar.gz`](https://github.com/XinweiJu/PRISM/releases/download/v1.0.0/PRISM-DLPE-weights-v1.0.0.tar.gz)
+archive from GitHub Releases. Its SHA256 is:
+
+```text
+6bf41d7aef7d85e75e304732a63516b6434b0acf22e4fd0dd5898701f1b1f32a
+```
+
+The small accompanying
+[`PRISM-DLPE-weights-v1.0.0.tar.gz.sha256`](https://github.com/XinweiJu/PRISM/releases/download/v1.0.0/PRISM-DLPE-weights-v1.0.0.tar.gz.sha256)
+file contains that checksum for use with `sha256sum -c`; it is not another
+checkpoint archive. After extraction, the weights have this layout:
 
 ```text
 PRISM-DLPE-weights-vX.Y.Z/
@@ -319,6 +310,8 @@ Run `python predict_prism.py COMMAND --help` to see the arguments implemented by
 - `ablations/networks/monodepth2`: archived plain Monodepth2 baseline.
 - `ablations/networks/monovit`: optional MonoViT backbone.
 - `ablations/training`: frozen-depth pose fine-tuning implementations used by stage 3 and older edge-loss experiments.
+- `ablations/splits`: historical interval-sampling split variants, excluded
+  from the canonical PRISM configuration.
 
 ## Reproducibility notes
 
@@ -328,7 +321,24 @@ Run `python predict_prism.py COMMAND --help` to see the arguments implemented by
 - Split files contain portable paths relative to `--data_path`.
 - Outputs, weights, datasets, caches and logs are ignored by Git.
 
-![Qualitative results](docs/assets/qualitative-results.png)
+![Qualitative results](docs/assets/images/qualitative-results.png)
+
+## 🗂️ Repository layout
+
+```text
+PRISM/
+├── train_prism.py / trainer.py     # training entrypoint and trainer
+├── predict_prism.py / reference/   # inference and evaluation
+├── preprocessing/                  # luminance and edge generation
+├── datasets/ / networks/           # loaders and PRISM models
+├── configs/ / splits/              # canonical HK and C3VD experiments
+├── docs/                            # specifications and project website
+├── release/                         # checkpoint hashes and provenance
+└── ablations/                       # optional baselines and archived splits
+```
+
+Shared root modules (`options.py`, `path_config.py`, `layers.py`, and
+`utils.py`) provide configuration, paths, geometry/loss layers, and utilities.
 
 ## Citation and related resources
 

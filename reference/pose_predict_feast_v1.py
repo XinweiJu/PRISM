@@ -106,8 +106,6 @@ def parse_args():
                         help="Base path for saving pose predictions")
     parser.add_argument("--data_path", type=str, default=data_path("c3vd_registered_sequences"),
                         help="Path to the C3VD dataset")
-    parser.add_argument("--split_file_root", type=str, default="splits/c3vd_mysplit_interval{}/test_files.txt",
-                        help="Path format for test file list")
     parser.add_argument("--num_interpolations", type=int, default=10,
                         help="Number of intermediate frames to interpolate")
     parser.add_argument("--method", type=str, default="monodepth")

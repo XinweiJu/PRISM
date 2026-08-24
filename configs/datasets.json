@@ -4,7 +4,7 @@
     "input_root": "data_folder/input_data/hk",
     "generated_root": "data_folder/generated/hk",
     "image_pattern": "<sequence>/<frame:05d>.jpg",
-    "split_family": ["hk", "hk_interval5", "hk_interval10", "hk_interval20", "hk_interval30"],
+    "split": "hk",
     "base_split": {
       "train_frames": 16976,
       "validation_frames": 1887,
@@ -53,7 +53,7 @@
     "generated_root": "data_folder/generated/c3vd",
     "image_pattern": "<sequence>/<frame:04d>_color.png",
     "depth_pattern": "<sequence>/<frame:04d>_depth.tiff",
-    "split_family": ["c3vd_mysplit", "c3vd_mysplit_interval5", "c3vd_mysplit_interval10", "c3vd_mysplit_interval20", "c3vd_mysplit_interval30"],
+    "split": "c3vd_mysplit",
     "base_split": {
       "train_frames": 6819,
       "validation_frames": 1454,

@@ -37,15 +37,7 @@ class MonodepthOptions:
                                  default="c3vd_mysplit",
                                  choices=[
                                      "c3vd_mysplit",
-                                     "c3vd_mysplit_interval5",
-                                     "c3vd_mysplit_interval10",
-                                     "c3vd_mysplit_interval20",
-                                     "c3vd_mysplit_interval30",
                                      "hk",
-                                     "hk_interval5",
-                                     "hk_interval10",
-                                     "hk_interval20",
-                                     "hk_interval30",
                                  ])
         self.parser.add_argument("--num_layers",
                                  type=int,
