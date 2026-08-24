@@ -1,5 +1,7 @@
 # PRISM
 
+<sub><strong>P</strong>ose <strong>R</strong>efinement with <strong>I</strong>ntrinsic <strong>S</strong>hading and edge <strong>M</strong>aps</sub>
+
 [![Release](https://img.shields.io/github/v/release/XinweiJu/PRISM?label=weights&color=0f766e)](https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0)
 [![Project page](https://img.shields.io/badge/project-page-2563eb)](https://xinweiju.github.io/PRISM/)
 ![Python](https://img.shields.io/badge/Python-3.8.10-3776ab?logo=python&logoColor=white)

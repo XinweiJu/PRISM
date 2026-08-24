@@ -21,6 +21,8 @@ nav a { text-decoration: none; opacity: .86; }
 .hero main { max-width: 1050px; margin: 13vh auto 0; }
 .eyebrow { margin: 0 0 .8rem; color: #67d8c2; font-size: .78rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
 h1 { margin: 0; font-size: clamp(5rem, 16vw, 11rem); line-height: .86; letter-spacing: -.07em; }
+.acronym { margin: 1.2rem 0 0; color: rgba(255,255,255,.72); font-size: clamp(.78rem, 1.5vw, 1rem); letter-spacing: .08em; }
+.acronym strong { color: var(--mint); }
 .subtitle { max-width: 900px; margin: 2.2rem 0 1rem; font: 500 clamp(1.35rem, 3vw, 2.25rem)/1.25 Georgia, serif; }
 .authors { color: rgba(255,255,255,.7); }
 .actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2.2rem; }
