@@ -6,7 +6,7 @@
   --teal: #0f766e;
   --mint: #9fe3d4;
   --line: rgba(23, 33, 31, .13);
-  --content-width: 1120px;
+  --content-width: 760px;
 }
 
 * { box-sizing: border-box; }
@@ -19,7 +19,7 @@ nav { display: flex; justify-content: space-between; align-items: center; max-wi
 nav div { display: flex; gap: 1.5rem; }
 nav a { text-decoration: none; opacity: .86; }
 .brand { font-weight: 800; letter-spacing: .15em; opacity: 1; }
-.hero main { max-width: 1050px; margin: 13vh auto 0; }
+.hero main { max-width: var(--content-width); margin: 13vh auto 0; }
 .eyebrow { margin: 0 0 .8rem; color: #67d8c2; font-size: .78rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
 h1 { margin: 0; font-size: clamp(5rem, 16vw, 11rem); line-height: .86; letter-spacing: -.07em; }
 .acronym { margin: 1.2rem 0 0; color: rgba(255,255,255,.72); font-size: clamp(.78rem, 1.5vw, 1rem); letter-spacing: .08em; }
@@ -32,7 +32,7 @@ h1 { margin: 0; font-size: clamp(5rem, 16vw, 11rem); line-height: .86; letter-sp
 
 .section { padding: 7rem 6vw; }
 .section > * { width: 100%; max-width: var(--content-width); margin-left: auto; margin-right: auto; }
-.section-heading { max-width: 760px; margin-bottom: 3rem; }
+.section-heading { max-width: var(--content-width); margin-bottom: 3rem; text-align: left; }
 h2 { margin: 0 0 1rem; font: 600 clamp(2rem, 5vw, 4rem)/1.05 Georgia, serif; letter-spacing: -.03em; }
 .section-heading > p:last-child { color: var(--muted); font-size: 1.12rem; }
 .architecture { display: block; width: 100%; padding: 1rem; border: 1px solid var(--line); border-radius: 22px; background: var(--white); box-shadow: 0 25px 70px rgba(28, 53, 47, .1); }
