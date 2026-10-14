@@ -31,7 +31,7 @@ h1 { margin: 0; font-size: clamp(5rem, 16vw, 11rem); line-height: .86; letter-sp
 .actions .primary { border-color: var(--mint); color: #08211d; background: var(--mint); font-weight: 700; }
 
 .section { padding: 7rem 6vw; }
-.section > * { width: 100%; max-width: var(--content-width); margin-left: auto; margin-right: auto; }
+.section-inner { width: 100%; max-width: var(--content-width); margin-left: auto; margin-right: auto; }
 .section-heading { max-width: var(--content-width); margin-bottom: 3rem; text-align: left; }
 h2 { margin: 0 0 1rem; font: 600 clamp(2rem, 5vw, 4rem)/1.05 Georgia, serif; letter-spacing: -.03em; }
 .section-heading > p:last-child { color: var(--muted); font-size: 1.12rem; }

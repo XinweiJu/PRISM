@@ -32,29 +32,33 @@
   </header>
 
   <section id="method" class="section">
-    <div class="section-heading">
-      <p class="eyebrow">Approach</p>
-      <h2>Geometry guided by complementary visual cues</h2>
-      <p>PRISM routes RGB and luminance to DepthNet, while RGB and edge maps guide PoseNet. The released preprocessing pipeline reproduces both auxiliary modalities.</p>
-    </div>
-    <img class="architecture" src="assets/images/prism-architecture.png" alt="PRISM depth and pose estimation architecture">
-    <div class="cards">
-      <article><span>01</span><h3>Luminance-aware depth</h3><p>IID-derived illumination complements RGB appearance for monocular depth estimation.</p></article>
-      <article><span>02</span><h3>Edge-guided pose</h3><p>Structural edge cues improve motion learning in challenging endoscopic imagery.</p></article>
-      <article><span>03</span><h3>Reproducible pipeline</h3><p>Public split manifests, preprocessing commands, configuration files, and checkpoint hashes.</p></article>
+    <div class="section-inner">
+      <div class="section-heading">
+        <p class="eyebrow">Approach</p>
+        <h2>Geometry guided by complementary visual cues</h2>
+        <p>PRISM routes RGB and luminance to DepthNet, while RGB and edge maps guide PoseNet. The released preprocessing pipeline reproduces both auxiliary modalities.</p>
+      </div>
+      <img class="architecture" src="assets/images/prism-architecture.png" alt="PRISM depth and pose estimation architecture">
+      <div class="cards">
+        <article><span>01</span><h3>Luminance-aware depth</h3><p>IID-derived illumination complements RGB appearance for monocular depth estimation.</p></article>
+        <article><span>02</span><h3>Edge-guided pose</h3><p>Structural edge cues improve motion learning in challenging endoscopic imagery.</p></article>
+        <article><span>03</span><h3>Reproducible pipeline</h3><p>Public split manifests, preprocessing commands, configuration files, and checkpoint hashes.</p></article>
+      </div>
     </div>
   </section>
 
   <section id="results" class="section dark">
-    <div class="section-heading">
-      <p class="eyebrow">Qualitative comparison</p>
-      <h2>Cross-domain depth on EndoMapper</h2>
-      <p>Input video and predicted depth from PRISM and representative self-supervised baselines.</p>
+    <div class="section-inner">
+      <div class="section-heading">
+        <p class="eyebrow">Qualitative comparison</p>
+        <h2>Cross-domain depth on EndoMapper</h2>
+        <p>Input video and predicted depth from PRISM and representative self-supervised baselines.</p>
+      </div>
+      <video controls muted loop playsinline preload="metadata" poster="assets/images/comparison_2x4_ppt-poster.jpg">
+        <source src="assets/videos/comparison_2x4_ppt.mp4" type="video/mp4">
+        Your browser does not support embedded MP4 video.
+      </video>
     </div>
-    <video controls muted loop playsinline preload="metadata" poster="assets/images/comparison_2x4_ppt-poster.jpg">
-      <source src="assets/videos/comparison_2x4_ppt.mp4" type="video/mp4">
-      Your browser does not support embedded MP4 video.
-    </video>
   </section>
 
   <section class="section citation">
