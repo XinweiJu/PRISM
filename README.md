@@ -1,17 +1,16 @@
 # PRISM
 
-<sub><strong>P</strong>ose <strong>R</strong>efinement with <strong>I</strong>ntrinsic <strong>S</strong>hading and edge <strong>M</strong>aps</sub>
+### **P**ose **R**efinement with **I**ntrinsic **S**hading and edge **M**aps
 
 [![Release](https://img.shields.io/github/v/release/XinweiJu/PRISM?label=weights&color=0f766e)](https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0)
-[![Project page](https://img.shields.io/badge/project-page-2563eb)](https://xinweiju.github.io/PRISM/)
 ![Python](https://img.shields.io/badge/Python-3.8.10-3776ab?logo=python&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-1.10.0%2Bcu102-ee4c2c?logo=pytorch&logoColor=white)
 ![CUDA](https://img.shields.io/badge/CUDA-10.2-76b900?logo=nvidia&logoColor=white)
 ![Linux](https://img.shields.io/badge/tested-Ubuntu%2020.04-e95420?logo=ubuntu&logoColor=white)
 
-**[Paper](https://doi.org/10.1007/s11548-026-03669-1) ·
-[Project page](https://xinweiju.github.io/PRISM/) ·
-[Download weights](https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0)**
+**[📄 Paper](https://doi.org/10.1007/s11548-026-03669-1) ·
+[🖥️ Project page](https://xinweiju.github.io/PRISM/) ·
+[⬇️ Download weights](https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0)**
 
 Code for **[Multi-Modal Monocular Endoscopic Depth and Pose Estimation with Edge-Guided Self-Supervision](https://doi.org/10.1007/s11548-026-03669-1)**.
 
