@@ -10,7 +10,7 @@
 <body>
   <nav class="site-nav" aria-label="Main navigation">
     <a class="wordmark" href="#top">PRISM</a>
-    <div><a href="#results">Results</a><a href="#framework">Framework</a><a href="#highlights">Highlights</a><a href="#citation">Citation</a></div>
+    <div><a href="#overview">Overview</a><a href="#results">Visual Results</a><a href="#quantitative">Quantitative</a><a href="#framework">Framework</a><a href="#highlights">Highlights</a><a href="#citation">Citation</a></div>
   </nav>
 
   <main id="top">
@@ -25,22 +25,39 @@
         <a href="https://github.com/XinweiJu/PRISM">💻 Code</a>
         <a href="https://github.com/XinweiJu/PRISM/releases/tag/v1.0.0">⬇️ Weights</a>
       </div>
-      <img class="lead-result" src="assets/images/qualitative-results.png" alt="Qualitative depth comparison between PRISM and self-supervised baselines">
     </header>
 
     <section id="overview">
       <h2>Overview</h2>
+      <video controls muted loop playsinline preload="metadata" poster="assets/images/comparison_2x4_ppt-poster.jpg">
+        <source src="assets/videos/comparison_2x4_ppt.mp4" type="video/mp4">
+        Your browser does not support embedded MP4 video.
+      </video>
       <p>PRISM is a self-supervised framework for monocular depth and camera-pose estimation in colonoscopy. It supplements RGB images with two complementary cues: intrinsic shading supports depth prediction, while structural edge maps guide pose estimation.</p>
       <p>The method is designed for difficult endoscopic scenes containing weak texture, non-uniform illumination, specular reflections and domain variation.</p>
     </section>
 
     <section id="results">
       <h2>Visual Results</h2>
-      <p>The comparison below shows input colonoscopy video alongside predicted depth from PRISM and representative self-supervised baselines. PRISM preserves anatomical structure while producing temporally coherent depth.</p>
-      <video controls muted loop playsinline preload="metadata" poster="assets/images/comparison_2x4_ppt-poster.jpg">
-        <source src="assets/videos/comparison_2x4_ppt.mp4" type="video/mp4">
-        Your browser does not support embedded MP4 video.
-      </video>
+      <p>Qualitative comparisons show how explicit structural and illumination cues preserve colon geometry across low-texture regions, reflections and changing appearance.</p>
+      <figure><img src="assets/images/qualitative-results.png" alt="Qualitative depth comparison between PRISM and self-supervised baselines"></figure>
+    </section>
+
+    <section id="quantitative">
+      <h2>Quantitative Results</h2>
+      <p>Models are trained on real Hyper-Kvasir video and evaluated on the C3VD test set. PRISM achieves the lowest RMSE, LogRMSE, MAE and SqRel among the compared methods, while remaining competitive in camera trajectory estimation.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Method</th><th>RMSE ↓</th><th>LogRMSE ↓</th><th>MAE ↓</th><th>AbsRel ↓</th><th>SqRel ↓</th><th>ATE ↓</th></tr></thead>
+          <tbody>
+            <tr><td>Monodepth2</td><td>6.3138</td><td>0.1841</td><td>4.3699</td><td>0.1501</td><td>1.0168</td><td>2.7025</td></tr>
+            <tr><td>MonoViT</td><td>6.8544</td><td><u>0.1789</u></td><td>4.6146</td><td><u>0.1473</u></td><td>1.0958</td><td>2.4298</td></tr>
+            <tr><td>SHADeS</td><td>7.1065</td><td>0.1845</td><td>4.7230</td><td>0.1500</td><td>1.1437</td><td><strong>1.2533</strong></td></tr>
+            <tr class="ours"><td>PRISM</td><td><strong>6.1246</strong></td><td>0.1830</td><td><strong>4.3300</strong></td><td>0.1475</td><td><strong>1.0010</strong></td><td><u>1.9077</u></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Selected metrics from the paper's C3VD comparison. Lower is better.</p>
     </section>
 
     <section id="framework">
@@ -52,9 +69,9 @@
     <section id="highlights">
       <h2>Key Points</h2>
       <div class="key-points">
-        <article><span>01</span><h3>Shading-aware depth</h3><p>RGB and intrinsic shading provide complementary appearance and illumination cues to DepthNet.</p></article>
-        <article><span>02</span><h3>Edge-guided pose</h3><p>RGB and structural edges help PoseNet estimate motion in low-texture and reflective scenes.</p></article>
-        <article><span>03</span><h3>Reproducible release</h3><p>Code, checkpoints, preprocessing, dataset splits and paper configurations are publicly available.</p></article>
+        <article><span>01</span><h3>Structure where texture is weak</h3><p>Explicit edge features expose colon folds and high-frequency boundaries that are difficult to recover from raw, low-texture RGB alone.</p></article>
+        <article><span>02</span><h3>Geometry from illumination</h3><p>Intrinsic shading separates useful shape cues from reflectance, giving depth estimation a stronger signal under complex endoscopic lighting.</p></article>
+        <article><span>03</span><h3>Stable motion and depth</h3><p>Stage-wise learning couples depth with edge-guided pose refinement to improve geometry and camera trajectories across challenging domains.</p></article>
       </div>
     </section>
 
